@@ -163,7 +163,7 @@ const HomePage = () => {
               <button className="bg-white text-black px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/90 transition-all hover:scale-105">
                 Shop Now
               </button>
-              <button className="border-2 border-white px-8 py-4 rounded-full text-lg font-semibold hover:bg-white hover:text-black transition-all">
+              <button className="bg-white text-black px-8 py-4 rounded-full text-lg font-semibold hover:bg-white/90 transition-all hover:scale-105">
                 Learn More
               </button>
             </div>

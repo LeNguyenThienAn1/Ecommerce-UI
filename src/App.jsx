@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext.jsx';
 import { CartProvider } from './context/CartContext.jsx';
 import MainLayout from './layouts/MainLayout';
-import HomePage from './pages/HomePage.jsx';
-import LoginPage from './pages/LoginPage.jsx';
-import RegisterPage from './pages/RegisterPage.jsx';
-import CartPage from './pages/CartPage.jsx';
+import HomePage from './pages/user/HomePage.jsx';
+import ProductPage from './pages/user/ProductPage.jsx';
+import LoginPage from './pages/user/LoginPage.jsx';
+import RegisterPage from './pages/user/RegisterPage.jsx';
+import CartPage from './pages/user/CartPage.jsx';
+import AdminDashboard from './pages/admin/AdminDashboard.jsx';
 
 function App() {
   return (
@@ -17,7 +19,7 @@ function App() {
             {/* Routes sử dụng MainLayout */}
             <Route path="/" element={<MainLayout />}>
               <Route index element={<HomePage />} />
-              <Route path="products" element={<div className="p-8 text-center">Sản phẩm - Đang phát triển</div>} />
+              <Route path="products" element={<ProductPage />} />
               <Route path="cart" element={<CartPage />} />
             </Route>
             
