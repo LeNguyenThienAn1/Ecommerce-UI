@@ -1,6 +1,32 @@
 import React from "react";
 import { Link } from "react-router-dom";
 
+const categoriesEnum = [
+  { id: 1, name: "TV" },
+  { id: 2, name: "Phone" },
+  { id: 3, name: "Laptop" },
+  { id: 4, name: "Tablet" },
+  { id: 5, name: "Accessory" },
+  { id: 6, name: "Headphone" },
+  { id: 7, name: "Camera" },
+  { id: 8, name: "SmartWatch" },
+];
+
+const brandsEnum = [
+  { id: 1, name: "Samsung" },
+  { id: 2, name: "Apple" },
+  { id: 3, name: "LG" },
+  { id: 4, name: "Sony" },
+  { id: 5, name: "Xiaomi" },
+  { id: 6, name: "Asus" },
+  { id: 7, name: "Acer" },
+  { id: 8, name: "Dell" },
+  { id: 9, name: "HP" },
+  { id: 10, name: "Huawei" },
+  { id: 11, name: "Oppo" },
+  { id: 12, name: "Vivo" },
+];
+
 const featuredTypeLabel = {
   0: "Normal",
   1: "Best Seller",
@@ -11,9 +37,9 @@ const featuredTypeLabel = {
 
 const featuredTypeColor = {
   1: "bg-yellow-500", // Best Seller
-  2: "bg-green-500",  // New
-  3: "bg-blue-500",   // Popular
-  4: "bg-red-600",    // Sale
+  2: "bg-green-500", // New
+  3: "bg-blue-500", // Popular
+  4: "bg-red-600", // Sale
 };
 
 const ProductCard = ({ product }) => {
@@ -21,17 +47,21 @@ const ProductCard = ({ product }) => {
     <div className="relative border rounded-2xl shadow hover:shadow-lg transition p-4 flex flex-col bg-white">
       {/* Badge Featured */}
       {product.isFeatured && (
-        <span
-          className={`absolute top-2 left-2 text-white text-xs font-bold px-3 py-1 rounded-full shadow ${
-            featuredTypeColor[product.featuredType] || "bg-purple-500"
-          }`}
-        >
-          {featuredTypeLabel[product.featuredType] ?? "Hot"}
-        </span>
-      )}
+  <span
+    className={`absolute top-2 left-2 text-white text-xs font-bold px-3 py-1 rounded-full shadow ${
+      featuredTypeColor[product.featuredType] || "bg-purple-500"
+    }`}
+  >
+    {featuredTypeLabel[product.featuredType] ?? "Hot"}
+  </span>
+)}
+
 
       {/* Product Image */}
-      <Link to={`/products/${product.id}`} className="overflow-hidden rounded-xl">
+      <Link
+        to={`/products/${product.id}`}
+        className="overflow-hidden rounded-xl"
+      >
         <img
           src={product.imageUrl}
           alt={product.name}
@@ -73,20 +103,27 @@ const ProductCard = ({ product }) => {
       </div>
 
       {/* Extra info */}
-      <div className="text-sm text-gray-600 mt-2 space-y-1">
-        <p>
-          <span className="font-medium">Category:</span>{" "}
-          {product.categoryName ?? "Unknown"}
-        </p>
-        <p>
-          <span className="font-medium">Stock:</span>{" "}
-          {product.stock}
-        </p>
-      </div>
+<div className="text-sm text-gray-600 mt-2 space-y-1">
+  <p>
+    <span className="font-medium">Category:</span>{" "}
+    {categoriesEnum.find((c) => c.id === product.category)?.name || "Unknown"}
+  </p>
+  <p>
+    <span className="font-medium">Brand:</span>{" "}
+    {brandsEnum.find((b) => b.id === product.brand)?.name || "Unknown"}
+  </p>
+  <p>
+    <span className="font-medium">Stock:</span> {product.stock}
+  </p>
+</div>
+
 
       {/* Actions */}
       <div className="flex items-center justify-between mt-4">
-        <Link to={`/products/${product.id}`} className="text-blue-600 hover:underline">
+        <Link
+          to={`/products/${product.id}`}
+          className="text-blue-600 hover:underline"
+        >
           View details
         </Link>
         <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">

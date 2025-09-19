@@ -8,7 +8,7 @@ export default function Dashboard() {
     const fetchData = async () => {
       try {
         // Fetch products
-        const resProducts = await fetch("https://localhost:7165/api/admin/products", {
+        const resProducts = await fetch("https://localhost:7165/api/admin/Paging", {
           headers: { Accept: "text/plain" }
         });
         const textProducts = await resProducts.text();

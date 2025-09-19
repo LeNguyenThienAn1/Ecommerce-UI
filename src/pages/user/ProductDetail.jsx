@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
+import { addToCart } from "../../utils/cartService";
 
 export default function ProductDetail() {
-  const { id } = useParams(); // get id from URL
+  const { id } = useParams(); // lấy id từ URL
   const [product, setProduct] = useState(null);
   const [category, setCategory] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -16,7 +17,7 @@ export default function ProductDetail() {
   });
 
   useEffect(() => {
-    // Fetch product by id
+    // Fetch product theo id
     fetch(`https://localhost:7165/api/products/${id}`)
       .then((res) => {
         if (!res.ok) throw new Error("Failed to fetch product");
@@ -67,6 +68,20 @@ export default function ProductDetail() {
   // Handler khi chọn option
   const handleDetailChange = (field, value) => {
     setSelectedDetail((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handler Add to Cart
+  const handleAddToCart = () => {
+    const productToAdd = {
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.imageUrl,
+      ...selectedDetail,
+    };
+
+    addToCart(productToAdd, 1); // thêm 1 sản phẩm
+    alert("✅ Sản phẩm đã được thêm vào giỏ hàng!");
   };
 
   return (
@@ -173,7 +188,11 @@ export default function ProductDetail() {
             </div>
           </div>
 
-          <button className="mt-6 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700">
+          {/* Add to Cart */}
+          <button
+            onClick={handleAddToCart}
+            className="mt-6 bg-red-600 text-white px-6 py-2 rounded-lg hover:bg-red-700"
+          >
             Add to Cart
           </button>
         </div>
