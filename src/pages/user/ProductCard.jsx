@@ -1,70 +1,97 @@
-import { addToCart } from "../utils/cartService";
+  // import React from "react";
+  // import { Link, useNavigate } from "react-router-dom";
+  // import { addToCart } from "../services/cartService"; // ✅ import
 
-const ProductCard = ({ product }) => {
-  const handleAddToCart = () => {
-    addToCart(product, 1);
-    alert("✅ Đã thêm vào giỏ hàng!");
-  };
+  // const featuredTypeLabel = {
+  //   0: "Normal",
+  //   1: "Best Seller",
+  //   2: "New",
+  //   3: "Popular",
+  //   4: "Sale",
+  // };
 
-  // Giá sau khi giảm
-  const finalPrice = product.salePercent
-    ? product.price * (1 - product.salePercent / 100)
-    : product.price;
+  // const featuredTypeColor = {
+  //   1: "bg-yellow-500",
+  //   2: "bg-green-500",
+  //   3: "bg-blue-500",
+  //   4: "bg-red-600",
+  // };
 
-  return (
-    <div className="p-4 bg-white rounded-xl shadow hover:shadow-md transition">
-      {/* Ảnh sản phẩm */}
-      <img
-        src={product.imageUrl || "/placeholder.png"}
-        alt={product.name}
-        className="w-full h-48 object-cover rounded-lg mb-4"
-      />
+  // const ProductCard = ({ product, categoryName, brandName }) => {
+  //   const navigate = useNavigate();
 
-      {/* Tên sản phẩm */}
-      <h3 className="text-lg font-bold line-clamp-1">{product.name}</h3>
+  //   const handleAddToCart = () => {
+  //     addToCart(product);
+  //     alert("✅ Sản phẩm đã được thêm vào giỏ hàng!");
+  //     navigate("/cart");
+  //   };
 
-      {/* Brand id (nếu muốn đổi thành tên thì map brandId -> brandName ở FE) */}
-      <p className="text-gray-500 text-sm">Brand: {product.brand}</p>
+  //   return (
+  //     <div className="relative border rounded-2xl shadow hover:shadow-lg transition p-4 flex flex-col bg-white">
+  //       {product.isFeatured && (
+  //         <span
+  //           className={`absolute top-2 left-2 text-white text-xs font-bold px-3 py-1 rounded-full shadow ${
+  //             featuredTypeColor[product.featuredType] || "bg-purple-500"
+  //           }`}
+  //         >
+  //           {featuredTypeLabel[product.featuredType] ?? "Hot"}
+  //         </span>
+  //       )}
 
-      {/* Giá */}
-      <div className="mt-2">
-        {product.salePercent > 0 ? (
-          <>
-            <p className="text-red-600 font-bold">
-              {new Intl.NumberFormat("vi-VN", {
-                style: "currency",
-                currency: "VND",
-              }).format(finalPrice)}
-            </p>
-            <p className="text-gray-400 line-through text-sm">
-              {new Intl.NumberFormat("vi-VN", {
-                style: "currency",
-                currency: "VND",
-              }).format(product.price)}
-            </p>
-            <span className="text-xs bg-red-100 text-red-600 px-2 py-0.5 rounded ml-1">
-              -{product.salePercent}%
-            </span>
-          </>
-        ) : (
-          <p className="text-blue-600 font-semibold">
-            {new Intl.NumberFormat("vi-VN", {
-              style: "currency",
-              currency: "VND",
-            }).format(product.price)}
-          </p>
-        )}
-      </div>
+  //       <Link to={`/products/${product.id}`} className="overflow-hidden rounded-xl">
+  //         <img
+  //           src={product.imageUrl}
+  //           alt={product.name}
+  //           className="w-full h-48 object-cover transform hover:scale-105 transition"
+  //         />
+  //       </Link>
 
-      {/* Nút thêm vào giỏ */}
-      <button
-        onClick={handleAddToCart}
-        className="mt-3 w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700"
-      >
-        Add To Cart
-      </button>
-    </div>
-  );
-};
+  //       <h3 className="text-lg font-semibold mt-3 line-clamp-1 text-gray-800">
+  //         {product.name}
+  //       </h3>
+  //       <p className="text-gray-600 text-sm line-clamp-2 flex-grow">
+  //         {product.description}
+  //       </p>
 
-export default ProductCard;
+  //       <div className="mt-2">
+  //         {product.salePercent > 0 ? (
+  //           <div>
+  //             <span className="text-red-500 font-bold text-lg">
+  //               {(product.price - (product.price * product.salePercent) / 100).toLocaleString()} đ
+  //             </span>
+  //             <span className="line-through text-gray-400 ml-2">
+  //               {product.price.toLocaleString()} đ
+  //             </span>
+  //             <span className="ml-2 text-green-600 font-semibold">
+  //               -{product.salePercent}%
+  //             </span>
+  //           </div>
+  //         ) : (
+  //           <p className="text-red-500 font-bold text-lg">
+  //             {product.price.toLocaleString()} đ
+  //           </p>
+  //         )}
+  //       </div>
+
+  //       <div className="text-sm text-gray-600 mt-2 space-y-1">
+  //         <p><span className="font-medium">Category:</span> {categoryName || "N/A"}</p>
+  //         <p><span className="font-medium">Brand:</span> {brandName || "N/A"}</p>
+  //         <p><span className="font-medium">Stock:</span> {product.stock}</p>
+  //       </div>
+
+  //       <div className="flex items-center justify-between mt-4">
+  //         <Link to={`/products/${product.id}`} className="text-blue-600 hover:underline">
+  //           View details
+  //         </Link>
+  //         <button
+  //           onClick={handleAddToCart}
+  //           className="bg-orange-500 text-black px-4 py-2 rounded-lg hover:bg-orange-600 transition"
+  //         >
+  //           Add to Cart
+  //         </button>
+  //       </div>
+  //     </div>
+  //   );
+  // };
+
+  // export default ProductCard;

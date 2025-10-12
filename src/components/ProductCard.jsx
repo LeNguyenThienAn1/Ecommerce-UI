@@ -1,31 +1,7 @@
 import React from "react";
-import { Link } from "react-router-dom";
-
-const categoriesEnum = [
-  { id: 1, name: "TV" },
-  { id: 2, name: "Phone" },
-  { id: 3, name: "Laptop" },
-  { id: 4, name: "Tablet" },
-  { id: 5, name: "Accessory" },
-  { id: 6, name: "Headphone" },
-  { id: 7, name: "Camera" },
-  { id: 8, name: "SmartWatch" },
-];
-
-const brandsEnum = [
-  { id: 1, name: "Samsung" },
-  { id: 2, name: "Apple" },
-  { id: 3, name: "LG" },
-  { id: 4, name: "Sony" },
-  { id: 5, name: "Xiaomi" },
-  { id: 6, name: "Asus" },
-  { id: 7, name: "Acer" },
-  { id: 8, name: "Dell" },
-  { id: 9, name: "HP" },
-  { id: 10, name: "Huawei" },
-  { id: 11, name: "Oppo" },
-  { id: 12, name: "Vivo" },
-];
+import { Link, useNavigate } from "react-router-dom";
+import axios from "axios";
+import { addToCart  } from "../services/cartService.js";
 
 const featuredTypeLabel = {
   0: "Normal",
@@ -36,32 +12,45 @@ const featuredTypeLabel = {
 };
 
 const featuredTypeColor = {
-  1: "bg-yellow-500", // Best Seller
-  2: "bg-green-500", // New
-  3: "bg-blue-500", // Popular
-  4: "bg-red-600", // Sale
+  1: "bg-yellow-500",
+  2: "bg-green-500",
+  3: "bg-blue-500",
+  4: "bg-red-600",
 };
 
-const ProductCard = ({ product }) => {
+const ProductCard = ({ product, categoryName, brandName }) => {
+  const navigate = useNavigate();
+
+  const handleAddToCart = async () => {
+    try {
+      // Gọi API lấy thông tin chi tiết sản phẩm
+      const res = await axios.get(`https://localhost:7165/api/Products/${product.id}`);
+      const productData = res.data;
+
+      // Lưu vào localStorage (cart)
+      addToCart(productData);
+
+      // Điều hướng sang trang giỏ hàng
+      navigate("/cart");
+    } catch (error) {
+      console.error("Add to cart failed:", error);
+      alert("Không thể thêm sản phẩm vào giỏ hàng!");
+    }
+  };
+
   return (
     <div className="relative border rounded-2xl shadow hover:shadow-lg transition p-4 flex flex-col bg-white">
-      {/* Badge Featured */}
       {product.isFeatured && (
-  <span
-    className={`absolute top-2 left-2 text-white text-xs font-bold px-3 py-1 rounded-full shadow ${
-      featuredTypeColor[product.featuredType] || "bg-purple-500"
-    }`}
-  >
-    {featuredTypeLabel[product.featuredType] ?? "Hot"}
-  </span>
-)}
+        <span
+          className={`absolute top-2 left-2 text-white text-xs font-bold px-3 py-1 rounded-full shadow ${
+            featuredTypeColor[product.featuredType] || "bg-purple-500"
+          }`}
+        >
+          {featuredTypeLabel[product.featuredType] ?? "Hot"}
+        </span>
+      )}
 
-
-      {/* Product Image */}
-      <Link
-        to={`/products/${product.id}`}
-        className="overflow-hidden rounded-xl"
-      >
+      <Link to={`/products/${product.id}`} className="overflow-hidden rounded-xl">
         <img
           src={product.imageUrl}
           alt={product.name}
@@ -69,7 +58,6 @@ const ProductCard = ({ product }) => {
         />
       </Link>
 
-      {/* Product Info */}
       <h3 className="text-lg font-semibold mt-3 line-clamp-1 text-gray-800">
         {product.name}
       </h3>
@@ -77,16 +65,11 @@ const ProductCard = ({ product }) => {
         {product.description}
       </p>
 
-      {/* Price & Sale */}
       <div className="mt-2">
         {product.salePercent && product.salePercent > 0 ? (
           <div>
             <span className="text-red-500 font-bold text-lg">
-              {(
-                product.price -
-                (product.price * product.salePercent) / 100
-              ).toLocaleString()}{" "}
-              đ
+              {(product.price - (product.price * product.salePercent) / 100).toLocaleString()} đ
             </span>
             <span className="line-through text-gray-400 ml-2">
               {product.price.toLocaleString()} đ
@@ -102,31 +85,20 @@ const ProductCard = ({ product }) => {
         )}
       </div>
 
-      {/* Extra info */}
-<div className="text-sm text-gray-600 mt-2 space-y-1">
-  <p>
-    <span className="font-medium">Category:</span>{" "}
-    {categoriesEnum.find((c) => c.id === product.category)?.name || "Unknown"}
-  </p>
-  <p>
-    <span className="font-medium">Brand:</span>{" "}
-    {brandsEnum.find((b) => b.id === product.brand)?.name || "Unknown"}
-  </p>
-  <p>
-    <span className="font-medium">Stock:</span> {product.stock}
-  </p>
-</div>
+      <div className="text-sm text-gray-600 mt-2 space-y-1">
+        <p><span className="font-medium">Category:</span> {categoryName || "N/A"}</p>
+        <p><span className="font-medium">Brand:</span> {brandName || "N/A"}</p>
+        <p><span className="font-medium">Stock:</span> {product.stock}</p>
+      </div>
 
-
-      {/* Actions */}
       <div className="flex items-center justify-between mt-4">
-        <Link
-          to={`/products/${product.id}`}
-          className="text-blue-600 hover:underline"
-        >
+        <Link to={`/products/${product.id}`} className="text-blue-600 hover:underline">
           View details
         </Link>
-        <button className="bg-orange-500 text-white px-4 py-2 rounded-lg hover:bg-orange-600 transition">
+        <button
+          onClick={handleAddToCart}
+          className="bg-orange-500 text-black px-4 py-2 rounded-lg hover:bg-orange-600 transition"
+        >
           Add to Cart
         </button>
       </div>

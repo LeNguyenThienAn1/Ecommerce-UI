@@ -1,45 +1,142 @@
 // src/utils/cartService.js
 
-// Lấy giỏ hàng từ localStorage
+const CART_KEY = "shopping_cart";
+
+/**
+ * Lấy giỏ hàng từ localStorage
+ */
 export const getCart = () => {
-  const cart = localStorage.getItem("cart");
-  return cart ? JSON.parse(cart) : [];
+  try {
+    const cart = localStorage.getItem(CART_KEY);
+    return cart ? JSON.parse(cart) : [];
+  } catch (error) {
+    console.error("Error reading cart:", error);
+    return [];
+  }
 };
 
-// Lưu giỏ hàng vào localStorage
+/**
+ * Lưu giỏ hàng vào localStorage
+ */
 const saveCart = (cart) => {
-  localStorage.setItem("cart", JSON.stringify(cart));
+  try {
+    localStorage.setItem(CART_KEY, JSON.stringify(cart));
+    // Trigger event để các component khác update
+    window.dispatchEvent(new Event("cartUpdated"));
+  } catch (error) {
+    console.error("Error saving cart:", error);
+  }
 };
 
-// Thêm sản phẩm vào giỏ
+/**
+ * Thêm sản phẩm vào giỏ hàng
+ * @param {Object} product - Sản phẩm cần thêm (phải có id)
+ * @param {number} quantity - Số lượng (mặc định 1)
+ */
 export const addToCart = (product, quantity = 1) => {
   const cart = getCart();
-  const existing = cart.find((item) => item.id === product.id);
+  
+  // Tìm sản phẩm đã tồn tại (cùng id và detail giống nhau)
+  const existingIndex = cart.findIndex((item) => {
+    return (
+      item.id === product.id &&
+      item.size === product.size &&
+      item.color === product.color &&
+      item.capacity === product.capacity &&
+      item.batteryCapacity === product.batteryCapacity
+    );
+  });
 
-  if (existing) {
-    existing.quantity += quantity;
+  if (existingIndex > -1) {
+    // Nếu đã có thì tăng số lượng
+    cart[existingIndex].quantity += quantity;
   } else {
-    cart.push({ ...product, quantity });
+    // Nếu chưa có thì thêm mới
+    cart.push({
+      ...product,
+      quantity: quantity,
+    });
   }
 
   saveCart(cart);
-  return cart;
 };
 
-// Cập nhật số lượng
-export const updateQuantity = (productId, quantity) => {
+/**
+ * Cập nhật số lượng sản phẩm
+ * @param {string} id - ID sản phẩm
+ * @param {number} change - Thay đổi số lượng (+1 hoặc -1)
+ */
+export const updateQuantity = (id, change) => {
   const cart = getCart();
-  const updated = cart.map((item) =>
-    item.id === productId ? { ...item, quantity } : item
-  );
-  saveCart(updated);
-  return updated;
+  const item = cart.find((p) => p.id === id);
+  
+  if (item) {
+    item.quantity += change;
+    if (item.quantity <= 0) {
+      removeFromCart(id);
+    } else {
+      saveCart(cart);
+    }
+  }
 };
 
-// Xóa sản phẩm
-export const removeFromCart = (productId) => {
+/**
+ * Xóa sản phẩm khỏi giỏ hàng
+ * @param {string} id - ID sản phẩm cần xóa
+ */
+export const removeFromCart = (id) => {
   const cart = getCart();
-  const updated = cart.filter((item) => item.id !== productId);
-  saveCart(updated);
-  return updated;
+  const newCart = cart.filter((p) => p.id !== id);
+  saveCart(newCart);
+};
+
+/**
+ * Xóa toàn bộ giỏ hàng
+ */
+export const clearCart = () => {
+  localStorage.removeItem(CART_KEY);
+  window.dispatchEvent(new Event("cartUpdated"));
+};
+
+/**
+ * Đếm tổng số sản phẩm trong giỏ
+ */
+export const getCartCount = () => {
+  const cart = getCart();
+  return cart.reduce((total, item) => total + item.quantity, 0);
+};
+
+/**
+ * Tính tổng tiền giỏ hàng
+ */
+export const getCartTotal = () => {
+  const cart = getCart();
+  return cart.reduce((total, item) => total + item.price * item.quantity, 0);
+};
+
+/**
+ * Tạo đơn hàng (gọi API)
+ * @param {Object} orderDto - Thông tin đơn hàng
+ * @param {Object} billInfo - Thông tin người nhận
+ */
+export const createOrder = async (orderDto, billInfo) => {
+  const request = {
+    order: orderDto,
+    bill: billInfo,
+  };
+
+  const response = await fetch("http://localhost:5000/api/order", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(request),
+  });
+
+  if (!response.ok) {
+    const error = await response.text();
+    throw new Error(error || "Lỗi khi tạo đơn hàng");
+  }
+
+  return await response.json();
 };

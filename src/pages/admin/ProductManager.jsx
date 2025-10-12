@@ -1,61 +1,6 @@
 import React, { useEffect, useState } from "react";
 
-// ================== ENUM OPTIONS ==================
-const CategoryOptions = [
-  { value: 0, label: "All Categories" },
-  { value: 1, label: "TV" },
-  { value: 2, label: "Phone" },
-  { value: 3, label: "Laptop" },
-  { value: 4, label: "Tablet" },
-  { value: 5, label: "Accessory" },
-  { value: 6, label: "Headphone" },
-  { value: 7, label: "Camera" },
-  { value: 8, label: "SmartWatch" },
-];
-
-const BrandOptions = [
-  { value: 0, label: "All Brands" },
-  { value: 1, label: "Samsung" },
-  { value: 2, label: "Apple" },
-  { value: 3, label: "LG" },
-  { value: 4, label: "Sony" },
-  { value: 5, label: "Xiaomi" },
-  { value: 6, label: "Asus" },
-  { value: 7, label: "Acer" },
-  { value: 8, label: "Dell" },
-  { value: 9, label: "HP" },
-  { value: 10, label: "Huawei" },
-  { value: 11, label: "Oppo" },
-  { value: 12, label: "Vivo" },
-];
-
-const ColorOptions = [
-  { value: 0, label: "None" },
-  { value: 1, label: "Blue" },
-  { value: 2, label: "Green" },
-  { value: 3, label: "Black" },
-  { value: 4, label: "White" },
-  { value: 5, label: "Yellow" },
-  { value: 6, label: "Pink" },
-  { value: 7, label: "Purple" },
-  { value: 8, label: "Orange" },
-  { value: 9, label: "Gray" },
-  { value: 10, label: "Brown" },
-  { value: 11, label: "Red" },
-];
-
-const CapacityOptions = [
-  { value: 0, label: "None" },
-  { value: 16, label: "16 GB" },
-  { value: 32, label: "32 GB" },
-  { value: 64, label: "64 GB" },
-  { value: 128, label: "128 GB" },
-  { value: 256, label: "256 GB" },
-  { value: 512, label: "512 GB" },
-  { value: 1024, label: "1 TB" },
-  { value: 2048, label: "2 TB" },
-];
-
+// ================== STATIC OPTIONS ==================
 const SortOptions = [
   { value: "name", label: "Sort by Name" },
   { value: "price", label: "Sort by Price" },
@@ -65,13 +10,15 @@ const SortOptions = [
 
 export default function ProductManager() {
   const [products, setProducts] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
   const [pageNumber, setPageNumber] = useState(1);
   const [pageSize] = useState(10);
   const [totalCount, setTotalCount] = useState(0);
 
   const [filters, setFilters] = useState({
-    category: 0,
-    brand: 0,
+    category: "",
+    brand: "",
     searchTerm: "",
     sortBy: "name",
   });
@@ -91,15 +38,40 @@ export default function ProductManager() {
     isFeatured: false,
     featuredType: 0,
     salePercent: 0,
-    category: 0,
-    brand: 0,
+    categoryId: "",
+    brandId: "",
     detail: {
       size: "",
-      color: 0,
       capacity: 0,
       batteryCapacity: 0,
     },
   });
+
+  // ================== LOAD CATEGORIES & BRANDS ==================
+  const loadCategories = async () => {
+    try {
+      const response = await fetch("https://localhost:7165/api/Admin/categories");
+      const data = await response.json();
+      setCategories(data || []);
+    } catch (err) {
+      console.error("Error loading categories:", err);
+    }
+  };
+
+  const loadBrands = async () => {
+    try {
+      const response = await fetch("https://localhost:7165/api/Admin/brands");
+      const data = await response.json();
+      setBrands(data || []);
+    } catch (err) {
+      console.error("Error loading brands:", err);
+    }
+  };
+
+  useEffect(() => {
+    loadCategories();
+    loadBrands();
+  }, []);
 
   // ================== API CALL ==================
   const loadProducts = () => {
@@ -108,11 +80,11 @@ export default function ProductManager() {
       sortBy: filters.sortBy || "name",
       pageNumber,
       pageSize,
-      brand: filters.brand && filters.brand !== 0 ? [filters.brand] : [],
-      category: filters.category && filters.category !== 0 ? [filters.category] : [],
+      brandIds: filters.brand ? [filters.brand] : null,
+      categoryIds: filters.category ? [filters.category] : null,
     };
 
-    fetch("https://localhost:7165/api/Admin/Paging", {
+    fetch("https://localhost:7165/api/Admin/products/paging", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify(payload),
@@ -126,8 +98,10 @@ export default function ProductManager() {
   };
 
   useEffect(() => {
-    loadProducts();
-  }, [pageNumber, filters]);
+    if (categories.length > 0 && brands.length > 0) {
+      loadProducts();
+    }
+  }, [pageNumber, filters, categories, brands]);
 
   useEffect(() => {
     setPageNumber(1);
@@ -160,11 +134,10 @@ export default function ProductManager() {
         isFeatured: product.isFeatured || false,
         featuredType: product.featuredType || 0,
         salePercent: product.salePercent || 0,
-        category: product.category,
-        brand: product.brand,
+        categoryId: product.categoryId || product.category?.id || "",
+        brandId: product.brandId || product.brand?.id || "",
         detail: {
           size: product.detail?.size || "",
-          color: product.detail?.color || 0,
           capacity: product.detail?.capacity || 0,
           batteryCapacity: product.detail?.batteryCapacity || 0,
         },
@@ -181,11 +154,10 @@ export default function ProductManager() {
         isFeatured: false,
         featuredType: 0,
         salePercent: 0,
-        category: 0,
-        brand: 0,
+        categoryId: categories[0]?.id || "",
+        brandId: brands[0]?.id || "",
         detail: {
           size: "",
-          color: 0,
           capacity: 0,
           batteryCapacity: 0,
         },
@@ -198,7 +170,7 @@ export default function ProductManager() {
     const payload = {
       ...(formData.id
         ? { id: formData.id }
-        : { id: "00000000-0000-0000-0000-000000000000" }), // Guid.Empty khi create
+        : { id: "00000000-0000-0000-0000-000000000000" }),
       name: formData.name,
       description: formData.description,
       price: Number(formData.price),
@@ -207,17 +179,16 @@ export default function ProductManager() {
       isFeatured: Boolean(formData.isFeatured),
       featuredType: Number(formData.featuredType),
       salePercent: Number(formData.salePercent),
-      category: Number(formData.category),
-      brand: Number(formData.brand),
+      categoryId: formData.categoryId,
+      brandId: formData.brandId,
       detail: {
         size: formData.detail.size,
-        color: Number(formData.detail.color), // enum
-        capacity: Number(formData.detail.capacity), // enum
+        capacity: Number(formData.detail.capacity),
         batteryCapacity: Number(formData.detail.batteryCapacity),
       },
     };
 
-    fetch("https://localhost:7165/api/Admin/products/createupdate", {
+    fetch("https://localhost:7165/api/Admin/products", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(payload),
@@ -233,14 +204,11 @@ export default function ProductManager() {
       .catch((err) => console.error(err));
   };
 
-  const getCategoryName = (value) =>
-    CategoryOptions.find((c) => c.value === value)?.label || "N/A";
-  const getBrandName = (value) =>
-    BrandOptions.find((b) => b.value === value)?.label || "N/A";
-  const getColorName = (value) =>
-    ColorOptions.find((c) => c.value === value)?.label || "N/A";
-  const getCapacityName = (value) =>
-    CapacityOptions.find((c) => c.value === value)?.label || "N/A";
+  // Helper functions
+  const getCategoryById = (id) => categories.find((c) => c.categoryId === id);
+  const getBrandById = (id) => brands.find((b) => b.brandId === id);
+  const getCategoryName = (id) => getCategoryById(id)?.categoryName || "N/A";
+  const getBrandName = (id) => getBrandById(id)?.brandName || "N/A";
 
   // ================== RENDER ==================
   return (
@@ -260,37 +228,33 @@ export default function ProductManager() {
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
           <select
             value={filters.category}
-            onChange={(e) =>
-              setFilters({ ...filters, category: Number(e.target.value) })
-            }
+            onChange={(e) => setFilters({ ...filters, category: e.target.value })}
             className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
-            {CategoryOptions.map((c) => (
-              <option key={c.value} value={c.value}>
-                {c.label}
+            <option value="">All Categories</option>
+            {categories.map((c) => (
+              <option key={c.categoryId || c.id} value={c.categoryId || c.id}>
+                {c.categoryName || c.name}
               </option>
             ))}
           </select>
 
           <select
             value={filters.brand}
-            onChange={(e) =>
-              setFilters({ ...filters, brand: Number(e.target.value) })
-            }
+            onChange={(e) => setFilters({ ...filters, brand: e.target.value })}
             className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
-            {BrandOptions.map((b) => (
-              <option key={b.value} value={b.value}>
-                {b.label}
+            <option value="">All Brands</option>
+            {brands.map((b) => (
+              <option key={b.brandId || b.id} value={b.brandId || b.id}>
+                {b.brandName || b.name}
               </option>
             ))}
           </select>
 
           <select
             value={filters.sortBy}
-            onChange={(e) =>
-              setFilters({ ...filters, sortBy: e.target.value })
-            }
+            onChange={(e) => setFilters({ ...filters, sortBy: e.target.value })}
             className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500"
           >
             {SortOptions.map((s) => (
@@ -304,9 +268,7 @@ export default function ProductManager() {
             type="text"
             placeholder="Search products..."
             value={filters.searchTerm}
-            onChange={(e) =>
-              setFilters({ ...filters, searchTerm: e.target.value })
-            }
+            onChange={(e) => setFilters({ ...filters, searchTerm: e.target.value })}
             className="border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500"
           />
         </div>
@@ -348,14 +310,12 @@ export default function ProductManager() {
                         src={p.imageUrl}
                         alt={p.name}
                         onError={(e) => {
-                          e.target.style.display = 'none';
+                          e.target.style.display = "none";
                         }}
                       />
                     )}
                     <div>
-                      <div className="text-sm font-medium text-gray-900">
-                        {p.name}
-                      </div>
+                      <div className="text-sm font-medium text-gray-900">{p.name}</div>
                       {p.description && (
                         <div className="text-sm text-gray-500">
                           {p.description.length > 50
@@ -369,16 +329,14 @@ export default function ProductManager() {
                 <td className="px-6 py-4 whitespace-nowrap">
                   <div className="text-sm text-gray-900">${p.price}</div>
                   {p.salePercent > 0 && (
-                    <div className="text-xs text-red-500">
-                      {p.salePercent}% OFF
-                    </div>
+                    <div className="text-xs text-red-500">{p.salePercent}% OFF</div>
                   )}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {getCategoryName(p.category)}
+                  {getCategoryName(p.categoryId)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {getBrandName(p.brand)}
+                  {getBrandName(p.brandId)}
                 </td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                   {p.stock || 0}
@@ -440,7 +398,7 @@ export default function ProductManager() {
       {/* Modal Create / Edit */}
       {showModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center p-4 z-50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-4xl max-h-[90vh] overflow-y-auto">
             <div className="px-6 py-4 border-b border-gray-200">
               <h3 className="text-lg font-semibold text-gray-900">
                 {editProduct ? "Edit Product" : "Create Product"}
@@ -509,7 +467,7 @@ export default function ProductManager() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Stock
+                    Stock Quantity *
                   </label>
                   <input
                     type="number"
@@ -527,15 +485,15 @@ export default function ProductManager() {
                     Category *
                   </label>
                   <select
-                    value={formData.category}
+                    value={formData.categoryId}
                     onChange={(e) =>
-                      setFormData({ ...formData, category: Number(e.target.value) })
+                      setFormData({ ...formData, categoryId: e.target.value })
                     }
                     className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
-                    {CategoryOptions.slice(1).map((c) => (
-                      <option key={c.value} value={c.value}>
-                        {c.label}
+                    {categories.map((c) => (
+                      <option key={c.categoryId} value={c.categoryId}>
+                        {c.categoryName}
                       </option>
                     ))}
                   </select>
@@ -546,15 +504,15 @@ export default function ProductManager() {
                     Brand *
                   </label>
                   <select
-                    value={formData.brand}
+                    value={formData.brandId}
                     onChange={(e) =>
-                      setFormData({ ...formData, brand: Number(e.target.value) })
+                      setFormData({ ...formData, brandId: e.target.value })
                     }
                     className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500"
                   >
-                    {BrandOptions.slice(1).map((b) => (
-                      <option key={b.value} value={b.value}>
-                        {b.label}
+                    {brands.map((b) => (
+                      <option key={b.brandId} value={b.brandId}>
+                        {b.brandName}
                       </option>
                     ))}
                   </select>
@@ -600,22 +558,26 @@ export default function ProductManager() {
                       }
                       className="w-4 h-4 text-blue-600"
                     />
-                    <span className="text-sm font-medium text-gray-700">Featured Product</span>
+                    <span className="text-sm font-medium text-gray-700">
+                      Featured Product
+                    </span>
                   </label>
                 </div>
               </div>
 
               {/* Product Detail Section */}
               <div className="mt-6 pt-6 border-t border-gray-200">
-                <h4 className="text-md font-semibold text-gray-900 mb-4">Product Details</h4>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <h4 className="text-md font-semibold text-gray-900 mb-4">
+                  Product Details
+                </h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
                       Size
                     </label>
                     <input
                       type="text"
-                      placeholder="e.g., 6.1 inch"
+                      placeholder="e.g., 6.1 inch, 13.3 inch"
                       value={formData.detail.size}
                       onChange={(e) =>
                         setFormData({
@@ -629,46 +591,23 @@ export default function ProductManager() {
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Color
+                      Capacity (GB)
                     </label>
-                    <select
-                      value={formData.detail.color}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          detail: { ...formData.detail, color: Number(e.target.value) },
-                        })
-                      }
-                      className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                      {ColorOptions.map((c) => (
-                        <option key={c.value} value={c.value}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-1">
-                      Capacity
-                    </label>
-                    <select
+                    <input
+                      type="number"
+                      placeholder="e.g., 128, 256, 512"
                       value={formData.detail.capacity}
                       onChange={(e) =>
                         setFormData({
                           ...formData,
-                          detail: { ...formData.detail, capacity: Number(e.target.value) },
+                          detail: {
+                            ...formData.detail,
+                            capacity: Number(e.target.value),
+                          },
                         })
                       }
                       className="w-full border border-gray-300 p-2 rounded-lg focus:ring-2 focus:ring-blue-500"
-                    >
-                      {CapacityOptions.map((c) => (
-                        <option key={c.value} value={c.value}>
-                          {c.label}
-                        </option>
-                      ))}
-                    </select>
+                    />
                   </div>
 
                   <div>

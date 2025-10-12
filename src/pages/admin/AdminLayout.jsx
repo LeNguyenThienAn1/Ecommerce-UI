@@ -10,6 +10,7 @@ export default function AdminLayout() {
     { id: "dashboard", label: "Dashboard", icon: Home, path: "/admin" },
     { id: "products", label: "Product Manager", icon: Package, path: "/admin/products" },
     { id: "categories", label: "Category Manager", icon: Package, path: "/admin/categories" },
+    { id: "brands", label: "Brand Manager", icon: Package, path: "/admin/brands" },
     { id: "orders", label: "Order Manager", icon: ShoppingCart, path: "/admin/orders" },
   ];
 
