@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { Link, Outlet, useLocation } from "react-router-dom";
-import { Home, Package, ShoppingCart, Menu } from "lucide-react";
+import { Home, Package, ShoppingCart, Menu, MessageCircle } from "lucide-react"; // 🆕 thêm icon chat
 
 export default function AdminLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(true);
@@ -12,6 +12,9 @@ export default function AdminLayout() {
     { id: "categories", label: "Category Manager", icon: Package, path: "/admin/categories" },
     { id: "brands", label: "Brand Manager", icon: Package, path: "/admin/brands" },
     { id: "orders", label: "Order Manager", icon: ShoppingCart, path: "/admin/orders" },
+
+    // 💬 Chat link (mới thêm)
+    { id: "chat", label: "Chat Manager", icon: MessageCircle, path: "/admin/chat" },
   ];
 
   const isActiveRoute = (path) =>
@@ -33,6 +36,7 @@ export default function AdminLayout() {
             <Menu className="w-6 h-6 text-gray-500" />
           </button>
         </div>
+
         <nav className="mt-4 space-y-2">
           {menuItems.map((item) => {
             const Icon = item.icon;
