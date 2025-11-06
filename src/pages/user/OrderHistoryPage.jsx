@@ -93,7 +93,8 @@ const OrderHistoryPage = () => {
       ) : (
         <div className="space-y-6">
           {orders.map(order => {
-            const total = order.details.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0);
+            const total = order.details?.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0) || 0;
+
             return (
               <div key={order.id} className="bg-white shadow-md rounded-lg p-6 hover:shadow-lg transition-shadow">
                 <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4">
@@ -112,7 +113,8 @@ const OrderHistoryPage = () => {
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Số sản phẩm:</span>
-                    <span className="text-gray-800 font-medium">{order.details.length}</span>
+                    <span className="text-gray-800 font-medium">{order.details?.length || 0}</span>
+
                   </div>
                   <div className="flex justify-between text-lg font-bold">
                     <span className="text-gray-700">Tổng cộng:</span>

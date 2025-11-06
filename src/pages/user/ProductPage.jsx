@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Search, Grid, List, ChevronLeft, ChevronRight, X } from "lucide-react";
+import { Search, Grid, List, X } from "lucide-react";
 import ProductCard from "../../components/ProductCard";
 
 const ProductPage = () => {
@@ -9,19 +9,17 @@ const ProductPage = () => {
   const [totalCount, setTotalCount] = useState(0);
   const [viewMode, setViewMode] = useState("grid");
 
-  // Query params state
   const [search, setSearch] = useState("");
   const [category, setCategory] = useState("");
   const [brand, setBrand] = useState("");
   const [sort, setSort] = useState("name");
   const [page, setPage] = useState(1);
-  const [pageSize] = useState(8);
+  const [pageSize] = useState(1000);
 
   const [loading, setLoading] = useState(false);
-
   const totalPages = Math.ceil(totalCount / pageSize);
 
-  // Load categories and brands on mount
+  // Load categories & brands
   useEffect(() => {
     const loadCategoriesAndBrands = async () => {
       try {
@@ -34,7 +32,6 @@ const ProductPage = () => {
           const categoriesData = await categoriesRes.json();
           setCategories(categoriesData || []);
         }
-
         if (brandsRes.ok) {
           const brandsData = await brandsRes.json();
           setBrands(brandsData || []);
@@ -43,7 +40,6 @@ const ProductPage = () => {
         console.error("Failed to load categories/brands:", err);
       }
     };
-
     loadCategoriesAndBrands();
   }, []);
 
@@ -57,22 +53,35 @@ const ProductPage = () => {
           sortBy: sort || "name",
           pageNumber: page,
           pageSize: pageSize,
-          brandIds: brand ? [brand] : null,
-          categoryIds: category ? [category] : null,
+          brandIds: brand ? [brand] : [],
+          categoryIds: category ? [category] : [],
         };
 
         const res = await fetch("https://localhost:7165/api/Products/Paging", {
           method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify(body),
         });
 
         if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
         const data = await res.json();
 
-        setProducts(data.items || []);
+        console.log("📦 Products API trả về:", data.items?.length, "items");
+
+        // ✅ Gộp chỉ theo tên sản phẩm
+        const mergedProducts = Object.values(
+          (data.items || []).reduce((acc, p) => {
+            const key = p.name.trim().toLowerCase(); // chỉ merge theo name
+            if (!acc[key]) {
+              acc[key] = { ...p, stock: p.stock || 1 };
+            } else {
+              acc[key].stock += p.stock || 1;
+            }
+            return acc;
+          }, {})
+        );
+
+        setProducts(mergedProducts);
         setTotalCount(data.totalCount || 0);
       } catch (err) {
         console.error("Failed to load products:", err);
@@ -90,10 +99,10 @@ const ProductPage = () => {
     setCategory("");
     setBrand("");
     setSort("name");
+    setSearch("");
     setPage(1);
   };
 
-  // Helper functions
   const getCategoryName = (categoryId) => {
     const cat = categories.find((c) => c.categoryId === categoryId);
     return cat?.categoryName || "N/A";
@@ -106,13 +115,15 @@ const ProductPage = () => {
 
   return (
     <div className="min-h-screen bg-gray-50">
-      {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
         <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold text-center mb-6">Electronics Store</h1>
-          <p className="text-center opacity-90 mb-6">Discover the latest tech products</p>
-          
-          {/* Search bar ở giữa */}
+          <h1 className="text-3xl font-bold text-center mb-6">
+            Electronics Store
+          </h1>
+          <p className="text-center opacity-90 mb-6">
+            Discover the latest tech products
+          </p>
+
           <div className="max-w-2xl mx-auto relative">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
             <input
@@ -128,10 +139,8 @@ const ProductPage = () => {
         </div>
       </div>
 
-      {/* Main content với sidebar */}
       <div className="container mx-auto px-4 py-6">
         <div className="flex gap-6">
-          {/* Sidebar */}
           <aside className="w-64 flex-shrink-0">
             <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
               <div className="flex items-center justify-between mb-6">
@@ -145,7 +154,6 @@ const ProductPage = () => {
                 </button>
               </div>
 
-              {/* Category Filter */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-2 text-gray-700">
                   Category
@@ -167,7 +175,6 @@ const ProductPage = () => {
                 </select>
               </div>
 
-              {/* Brand Filter */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-2 text-gray-700">
                   Brand
@@ -189,7 +196,6 @@ const ProductPage = () => {
                 </select>
               </div>
 
-              {/* Sort */}
               <div className="mb-6">
                 <label className="block text-sm font-semibold mb-2 text-gray-700">
                   Sort by
@@ -211,7 +217,6 @@ const ProductPage = () => {
                 </select>
               </div>
 
-              {/* View Mode */}
               <div>
                 <label className="block text-sm font-semibold mb-2 text-gray-700">
                   View
@@ -242,15 +247,10 @@ const ProductPage = () => {
             </div>
           </aside>
 
-          {/* Products area */}
           <main className="flex-1">
-            {/* Results count */}
             <div className="mb-4 text-sm text-gray-600">
               {totalCount > 0 && (
-                <p>
-                  Showing {(page - 1) * pageSize + 1}-
-                  {Math.min(page * pageSize, totalCount)} of {totalCount} products
-                </p>
+                <p>Showing {products.length} products</p>
               )}
             </div>
 
@@ -260,76 +260,23 @@ const ProductPage = () => {
                 <p className="mt-4">Loading products...</p>
               </div>
             ) : products.length ? (
-              <>
-                <div
-                  className={
-                    viewMode === "grid"
-                      ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
-                      : "space-y-4"
-                  }
-                >
-                  {products.map((product, idx) => (
-                    <ProductCard
-                      key={product.id ?? `product-${idx}`}
-                      product={product}
-                      viewMode={viewMode}
-                      categoryName={getCategoryName(product.categoryId)}
-                      brandName={getBrandName(product.brandId)}
-                    />
-                  ))}
-                </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="flex justify-center items-center gap-2 mt-8 flex-wrap">
-                    <button
-                      onClick={() => setPage((p) => Math.max(1, p - 1))}
-                      disabled={page === 1}
-                      className="p-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-
-                    {[...Array(totalPages)].map((_, i) => {
-                      const pageNum = i + 1;
-                      if (
-                        pageNum === 1 ||
-                        pageNum === totalPages ||
-                        (pageNum >= page - 1 && pageNum <= page + 1)
-                      ) {
-                        return (
-                          <button
-                            key={pageNum}
-                            onClick={() => setPage(pageNum)}
-                            className={`px-3 py-1 border rounded-lg transition-colors ${
-                              page === pageNum
-                                ? "bg-blue-600 text-white"
-                                : "bg-white hover:bg-gray-100"
-                            }`}
-                          >
-                            {pageNum}
-                          </button>
-                        );
-                      } else if (pageNum === page - 2 || pageNum === page + 2) {
-                        return (
-                          <span key={pageNum} className="px-2">
-                            ...
-                          </span>
-                        );
-                      }
-                      return null;
-                    })}
-
-                    <button
-                      onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-                      disabled={page === totalPages}
-                      className="p-2 border rounded-lg disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                )}
-              </>
+              <div
+                className={
+                  viewMode === "grid"
+                    ? "grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+                    : "space-y-4"
+                }
+              >
+                {products.map((product, idx) => (
+                  <ProductCard
+                    key={product.id ?? `product-${idx}`}
+                    product={product}
+                    viewMode={viewMode}
+                    categoryName={getCategoryName(product.categoryId)}
+                    brandName={getBrandName(product.brandId)}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="text-center text-gray-500 py-20">
                 <p className="text-xl">No products found</p>

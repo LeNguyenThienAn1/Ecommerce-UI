@@ -14,7 +14,7 @@ export default function UserChatPage() {
     // ✅ Tốt nhất là nên lấy thông tin này từ API nếu có thể,
     // nhưng dùng tạm như thế này vẫn ổn cho chức năng chat trực tiếp với admin.
     const admin = {
-        id: "42249b12-795d-493e-bf52-9f07b5d0e209", // ID của Admin trong DB
+        id: "cb0fbb0d-c008-4b4e-8fde-de97f33fdb91", // ID của Admin trong DB
         fullName: "Bộ phận hỗ trợ",
     };
 

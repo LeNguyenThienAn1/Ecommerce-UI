@@ -275,72 +275,59 @@ export default function ProductManager() {
       </div>
 
       {/* Table */}
-      <div className="bg-white shadow rounded-lg overflow-hidden">
+<div className="bg-white shadow rounded-lg overflow-hidden">
+  {Object.entries(
+    products.reduce((acc, product) => {
+      const key = product.name.trim().toLowerCase(); // gom theo tên
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(product);
+      return acc;
+    }, {})
+  ).map(([key, group]) => {
+    const first = group[0];
+    const categoryName = getCategoryName(first.categoryId);
+    const brandName = getBrandName(first.brandId);
+
+    return (
+      <div key={key} className="border-b border-gray-200">
+        {/* Header nhóm */}
+        <div className="bg-gray-100 px-6 py-3 font-semibold text-gray-800 flex justify-between items-center">
+          <span>
+            {first.name} ({group.length} biến thể)
+          </span>
+          <span className="text-sm text-gray-600">
+            {categoryName} — {brandName}
+          </span>
+        </div>
+
         <table className="w-full">
           <thead className="bg-gray-50">
             <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Product
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Price
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Category
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Brand
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Stock
-              </th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                Actions
-              </th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
             </tr>
           </thead>
           <tbody className="bg-white divide-y divide-gray-200">
-            {products.map((p) => (
+            {group.map((p) => (
               <tr key={p.id} className="hover:bg-gray-50">
                 <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="flex items-center">
-                    {p.imageUrl && (
-                      <img
-                        className="h-10 w-10 rounded-lg object-cover mr-3"
-                        src={p.imageUrl}
-                        alt={p.name}
-                        onError={(e) => {
-                          e.target.style.display = "none";
-                        }}
-                      />
-                    )}
-                    <div>
-                      <div className="text-sm font-medium text-gray-900">{p.name}</div>
-                      {p.description && (
-                        <div className="text-sm text-gray-500">
-                          {p.description.length > 50
-                            ? p.description.substring(0, 50) + "..."
-                            : p.description}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm text-gray-900">${p.price}</div>
-                  {p.salePercent > 0 && (
-                    <div className="text-xs text-red-500">{p.salePercent}% OFF</div>
+                  {p.imageUrl && (
+                    <img
+                      className="h-10 w-10 rounded-lg object-cover"
+                      src={p.imageUrl}
+                      alt={p.name}
+                      onError={(e) => (e.target.style.display = "none")}
+                    />
                   )}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {getCategoryName(p.categoryId)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {getBrandName(p.brandId)}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                  {p.stock || 0}
-                </td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${p.price}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getCategoryName(p.categoryId)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getBrandName(p.brandId)}</td>
+                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.stock || 0}</td>
                 <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
                   <button
                     className="text-indigo-600 hover:text-indigo-900 mr-3"
@@ -357,16 +344,12 @@ export default function ProductManager() {
                 </td>
               </tr>
             ))}
-            {products.length === 0 && (
-              <tr>
-                <td colSpan="6" className="text-center p-8 text-gray-500">
-                  No products found.
-                </td>
-              </tr>
-            )}
           </tbody>
         </table>
       </div>
+    );
+  })}
+</div>
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-6">

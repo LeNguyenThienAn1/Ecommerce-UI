@@ -31,32 +31,42 @@ export default function OrderDetailModal({ order, isLoading, onClose }) {
                   <strong>ID:</strong> <span className="font-mono text-sm">{order.id}</span>
                 </p>
                 <p>
-                  <strong>Người dùng:</strong> {order.userName}
-                </p>
-                <p>
-                  <strong>Trạng thái:</strong> {order.status}
-                </p>
-                <p>
-                  <strong>Tổng tiền:</strong>{" "}
-                  <span className="font-bold text-lg text-red-600">
-                    {order.totalAmount?.toLocaleString()} ₫
-                  </span>
-                </p>
-                <p>
-                  <strong>Ngày tạo:</strong> {new Date(order.createdAt).toLocaleString()}
-                </p>
+  <strong>ID:</strong> <span className="font-mono text-sm">{order.id}</span>
+</p>
+<p>
+  <strong>Người dùng:</strong> {order.customerName || "Không rõ"}
+</p>
+<p>
+  <strong>Trạng thái:</strong> {order.status}
+</p>
+<p>
+  <strong>Tổng tiền:</strong>{" "}
+  <span className="font-bold text-lg text-red-600">
+    {order.items
+      ?.reduce((sum, item) => sum + item.unitPrice * item.quantity, 0)
+      .toLocaleString()}{" "}
+    ₫
+  </span>
+</p>
+<p>
+  <strong>Ngày tạo:</strong>{" "}
+  {new Date(order.orderDate || order.createAt).toLocaleString()}
+</p>
 
-                <h3 className="mt-4 pt-4 border-t font-semibold text-gray-700">Sản phẩm đã đặt</h3>
-                <ul className="list-disc ml-6 space-y-1">
-                  {order.items?.map((item) => (
-                    <li key={item.productId}>
-                      {item.productName} × <strong>{item.quantity}</strong> —{" "}
-                      <span className="font-medium">
-                        {(item.price * item.quantity).toLocaleString()} ₫
-                      </span>
-                    </li>
-                  ))}
-                </ul>
+<h3 className="mt-4 pt-4 border-t font-semibold text-gray-700">
+  Sản phẩm đã đặt
+</h3>
+<ul className="list-disc ml-6 space-y-1">
+  {order.items?.map((item, index) => (
+    <li key={item.productId || index}>
+      {item.productName} × <strong>{item.quantity}</strong> —{" "}
+      <span className="font-medium">
+        {(item.unitPrice * item.quantity).toLocaleString()} ₫
+      </span>
+    </li>
+  ))}
+</ul>
+
               </div>
             )
           )}

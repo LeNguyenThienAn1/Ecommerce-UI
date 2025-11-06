@@ -2,87 +2,98 @@ import React from "react";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 
 // 🧩 Context Providers
-import { AuthProvider } from "./context/AuthContext.jsx";
-import { CartProvider } from "./context/CartContext.jsx";
+// SỬA LỖI: Xóa đuôi file .jsx trong import
+import { AuthProvider } from "./context/AuthContext";
+import { CartProvider } from "./context/CartContext";
 
 // 🧱 Layouts
+// SỬA LỖI: Xóa đuôi file .jsx trong import
 import MainLayout from "./layouts/MainLayout";
 import AdminLayout from "./pages/admin/AdminLayout";
 
 // 🛍️ User Pages
-import HomePage from "./pages/user/HomePage.jsx";
-import ProductPage from "./pages/user/ProductPage.jsx";
-import ProductDetail from "./pages/user/ProductDetail.jsx";
-import CartPage from "./pages/user/CartPage.jsx";
-import About from "./pages/user/About.jsx";
-import ProfilePage from "./pages/user/ProfilePage.jsx";
-import OrderHistoryPage from "./pages/user/OrderHistoryPage.jsx";
-import OrderSuccessPage from "./pages/user/OrderSuccessPage.jsx";
+// SỬA LỖI: Xóa đuôi file .jsx trong import
+import HomePage from "./pages/user/HomePage";
+import ProductPage from "./pages/user/ProductPage";
+import ProductDetail from "./pages/user/ProductDetail";
+import CartPage from "./pages/user/CartPage";
+import About from "./pages/user/About";
+import ProfilePage from "./pages/user/ProfilePage";
+import OrderHistoryPage from "./pages/user/OrderHistoryPage";
+import OrderSuccessPage from "./pages/user/OrderSuccessPage";
+// Import component EditProfilePage
+import EditProfilePage from "./pages/user/EditProfilePage"; 
 
 // 💬 Chat Pages
-import UserChatPage from "./pages/user/UserChatPage.jsx";
-import AdminChatPage from "./pages/admin/AdminChatPage.jsx";
+// SỬA LỖI: Xóa đuôi file .jsx trong import
+import UserChatPage from "./pages/user/UserChatPage";
+import AdminChatPage from "./pages/admin/AdminChatPage";
 
 // 🔐 Auth Pages
-import LoginPage from "./pages/user/LoginPage.jsx";
-import RegisterPage from "./pages/user/RegisterPage.jsx";
+// SỬA LỖI: Xóa đuôi file .jsx trong import
+import LoginPage from "./pages/user/LoginPage";
+import RegisterPage from "./pages/user/RegisterPage";
 
 // ⚙️ Admin Pages
-import DashboardOverview from "./pages/admin/DashboardOverview.jsx";
-import ProductManager from "./pages/admin/ProductManager.jsx";
-import CategoryManager from "./pages/admin/CategoryManager.jsx";
-import BrandManager from "./pages/admin/BrandManager.jsx";
-import OrderManager from "./pages/admin/OrderManager.jsx"; 
+// SỬA LỖI: Xóa đuôi file .jsx trong import
+import DashboardOverview from "./pages/admin/DashboardOverview";
+import ProductManager from "./pages/admin/ProductManager";
+import CategoryManager from "./pages/admin/CategoryManager";
+import BrandManager from "./pages/admin/BrandManager";
+import OrderManager from "./pages/admin/OrderManager"; 
 
 // 💬 Global Components
-import ChatBot from "./components/chat/ChatBot.jsx";
+// SỬA LỖI: Xóa đuôi file .jsx trong import
+import ChatBot from "./components/chat/ChatBot";
 
 function App() {
-  return (
-    <AuthProvider>
-      <CartProvider>
-        <Router>
-          <Routes>
-            {/* 🌐 USER AREA */}
-            <Route path="/" element={<MainLayout />}>
-              <Route index element={<HomePage />} />
-              <Route path="products" element={<ProductPage />} />
-              <Route path="products/:id" element={<ProductDetail />} />
-              <Route path="cart" element={<CartPage />} />
-              <Route path="about" element={<About />} />
-              <Route path="profile" element={<ProfilePage />} />
-              <Route path="orders" element={<OrderHistoryPage />} /> {/* ✅ Route added */}
-              <Route path="order-success" element={<OrderSuccessPage />} />
+  return (
+    <AuthProvider>
+      <CartProvider>
+        <Router>
+          <Routes>
+            {/* 🌐 USER AREA */}
+            <Route path="/" element={<MainLayout />}>
+              <Route index element={<HomePage />} />
+              <Route path="products" element={<ProductPage />} />
+              <Route path="products/:id" element={<ProductDetail />} />
+              <Route path="cart" element={<CartPage />} />
+              <Route path="about" element={<About />} />
+              <Route path="profile" element={<ProfilePage />} />
+              {/* 🧑‍💻 ĐÃ SỬA: Thay đổi 'profile-edit' thành 'profile/edit' */}
+              <Route path="profile/edit" element={<EditProfilePage />} /> 
+              <Route path="orders" element={<OrderHistoryPage />} />
+                <Route path="order-success" element={<OrderSuccessPage />} />
 
-              {/* 💬 User Chat */}
-              <Route path="chat" element={<UserChatPage />} />
-            </Route>
+              {/* 💬 User Chat */}
+              <Route path="chat" element={<UserChatPage />} />
+            </Route>
 
-            {/* 🔑 AUTH AREA */}
-            <Route path="/login" element={<LoginPage />} />
-            <Route path="/register" element={<RegisterPage />} />
+            {/* 🔑 AUTH AREA */}
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
 
-            {/* 🧭 ADMIN AREA */}
-            <Route path="/admin" element={<AdminLayout />}>
-              <Route index element={<DashboardOverview />} />
-              <Route path="products" element={<ProductManager />} />
-              <Route path="categories" element={<CategoryManager />} />
-              <Route path="brands" element={<BrandManager />} />
+            {/* 🧭 ADMIN AREA */}
+            <Route path="/admin" element={<AdminLayout />}>
+              <Route index element={<DashboardOverview />} />
+              <Route path="products" element={<ProductManager />} />
+              <Route path="categories" element={<CategoryManager />} />
+              <Route path="brands" element={<BrandManager />} />
 
-              {/* 📦 Order Management */}
-              <Route path="orders" element={<OrderManager />} /> 
+              {/* 📦 Order Management */}
+              <Route path="orders" element={<OrderManager />} /> 
 
-              {/* 💬 Admin Chat */}
-              <Route path="chat" element={<AdminChatPage />} />
-            </Route>
-          </Routes>
+              {/* 💬 Admin Chat */}
+              <Route path="chat" element={<AdminChatPage />} />
+            </Route>
+          </Routes>
 
-          {/* 🤖 ChatBot hiển thị toàn cục */}
-          <ChatBot />
-        </Router>
-      </CartProvider>
-    </AuthProvider>
-  );
+          {/* 🤖 ChatBot hiển thị toàn cục */}
+          <ChatBot />
+        </Router>
+      </CartProvider>
+    </AuthProvider>
+  );
 }
 
 export default App;
