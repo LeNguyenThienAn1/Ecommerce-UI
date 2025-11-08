@@ -100,21 +100,22 @@ const EditProfilePage = () => {
 
         try {
             // SỬ DỤNG userId ĐỘNG
-            const response = await fetch('https://localhost:7165/api/Users/update', { // Đã sửa :update thành update (giả định)
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'accept': '*/*'
-                },
-                body: JSON.stringify({
-                    id: userId, // Dùng ID động
-                    name: formData.name,
-                    email: formData.email,
-                    address: formData.address,
-                    phoneNumber: formData.phoneNumber,
-                    avatarUrl: formData.avatarUrl
-                })
-            });
+            const response = await fetch('https://localhost:7165/api/Users/update', {
+    method: 'PUT', // ✅ ĐÚNG
+    headers: {
+        'Content-Type': 'application/json',
+        'accept': '*/*'
+    },
+    body: JSON.stringify({
+        id: userId,
+        name: formData.name,
+        email: formData.email,
+        address: formData.address,
+        phoneNumber: formData.phoneNumber,
+        avatarUrl: formData.avatarUrl
+    })
+});
+
 
             if (!response.ok) {
                 const errorData = await response.json();

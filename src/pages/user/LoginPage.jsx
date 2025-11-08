@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { Lock, User, Loader2, AlertCircle, LogIn } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useAuth } from "../../context/AuthContext"; // ✅ Dùng AuthContext
+import { useAuth } from "../../context/AuthContext";
 
 const LoginPage = () => {
   const [isLogin, setIsLogin] = useState(true);
@@ -11,9 +11,9 @@ const LoginPage = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const { login } = useAuth(); // ✅ Lấy hàm login từ AuthContext
-
+  // ✅ Chuẩn hóa số điện thoại về +84
   const formatPhone = (phone) => {
     const p = phone.trim();
     if (p.startsWith("0")) return "+84" + p.slice(1);
@@ -28,15 +28,14 @@ const LoginPage = () => {
 
     try {
       if (isLogin) {
-        // ✅ Dùng context login thay vì axios trực tiếp
+        // ✅ Gọi hàm login từ AuthContext
         await login({
           phoneNumber: formatPhone(phoneNumber),
           password,
         });
-
-        navigate("/"); // ✅ Chuyển về trang chủ
+        navigate("/");
       } else {
-        // REGISTER
+        // ✅ Đăng ký tài khoản mới
         const res = await fetch("https://localhost:7165/api/Auth/register", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -47,13 +46,24 @@ const LoginPage = () => {
           }),
         });
 
-        if (!res.ok) throw new Error("Registration failed");
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({}));
+          throw new Error(errData.title || "Registration failed");
+        }
 
         alert("Registration successful! Please log in.");
         setIsLogin(true);
       }
     } catch (err) {
-      setError(err.message || "Something went wrong!");
+      let message = "Something went wrong!";
+      const msg = err?.message?.toLowerCase() || "";
+
+      if (msg.includes("vô hiệu hóa")) message = "Tài khoản của bạn đã bị vô hiệu hóa.";
+      else if (msg.includes("sai mật khẩu")) message = "Sai mật khẩu, vui lòng thử lại.";
+      else if (msg.includes("không tồn tại")) message = "Số điện thoại chưa được đăng ký.";
+      else if (err.response?.data?.title) message = err.response.data.title;
+
+      setError(message);
     } finally {
       setLoading(false);
     }

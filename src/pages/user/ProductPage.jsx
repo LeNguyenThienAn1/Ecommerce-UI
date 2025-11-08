@@ -114,40 +114,67 @@ const ProductPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="bg-gradient-to-r from-blue-600 to-purple-600 text-white py-12">
-        <div className="container mx-auto px-4">
-          <h1 className="text-3xl font-bold text-center mb-6">
-            Electronics Store
+    <div className="min-h-screen bg-gradient-to-b from-blue-50 via-white to-blue-50 relative overflow-hidden">
+      {/* Snowflakes decoration */}
+      <div className="fixed inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute top-10 left-10 text-blue-200 text-4xl animate-pulse">❄</div>
+        <div className="absolute top-20 right-20 text-blue-300 text-3xl animate-pulse" style={{animationDelay: '1s'}}>❄</div>
+        <div className="absolute top-40 left-1/4 text-blue-200 text-2xl animate-pulse" style={{animationDelay: '2s'}}>❄</div>
+        <div className="absolute top-60 right-1/3 text-blue-300 text-5xl animate-pulse" style={{animationDelay: '0.5s'}}>❄</div>
+        <div className="absolute bottom-20 left-1/3 text-blue-200 text-3xl animate-pulse" style={{animationDelay: '1.5s'}}>❄</div>
+        <div className="absolute bottom-40 right-1/4 text-blue-300 text-4xl animate-pulse" style={{animationDelay: '2.5s'}}>❄</div>
+      </div>
+
+      {/* Header with Christmas theme */}
+      <div className="bg-gradient-to-r from-blue-400 via-blue-300 to-blue-400 text-white py-12 relative shadow-lg border-b-4 border-blue-500">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-0 left-0 text-6xl">🎄</div>
+          <div className="absolute top-0 right-0 text-6xl">🎄</div>
+          <div className="absolute bottom-0 left-1/4 text-4xl">⛄</div>
+          <div className="absolute bottom-0 right-1/4 text-4xl">🎁</div>
+        </div>
+        
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="text-center mb-2">
+            <span className="text-5xl">🎅</span>
+          </div>
+          <h1 className="text-4xl font-bold text-center mb-2 drop-shadow-lg">
+            🎄 Christmas Electronics Store 🎄
           </h1>
-          <p className="text-center opacity-90 mb-6">
-            Discover the latest tech products
+          <p className="text-center opacity-90 mb-6 text-lg font-medium">
+            ✨ Magical Tech Gifts for the Holidays ✨
           </p>
 
           <div className="max-w-2xl mx-auto relative">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-blue-400 w-5 h-5" />
             <input
-              placeholder="Search for products..."
+              placeholder="🔍 Search for Christmas gifts..."
               value={search}
               onChange={(e) => {
                 setSearch(e.target.value);
                 setPage(1);
               }}
-              className="w-full pl-12 pr-4 py-3 rounded-lg text-gray-800 bg-white focus:ring-2 focus:ring-purple-300 focus:outline-none shadow-lg"
+              className="w-full pl-12 pr-4 py-3 rounded-full text-gray-800 bg-white focus:ring-4 focus:ring-blue-200 focus:outline-none shadow-xl border-2 border-blue-200"
             />
           </div>
         </div>
       </div>
 
-      <div className="container mx-auto px-4 py-6">
+      <div className="container mx-auto px-4 py-6 relative z-10">
         <div className="flex gap-6">
           <aside className="w-64 flex-shrink-0">
-            <div className="bg-white rounded-lg shadow-sm p-6 sticky top-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="font-bold text-lg">Filters</h2>
+            <div className="bg-white rounded-2xl shadow-xl p-6 sticky top-6 border-4 border-blue-200 relative overflow-hidden">
+              {/* Decoration corners */}
+              <div className="absolute top-2 left-2 text-2xl">🎁</div>
+              <div className="absolute top-2 right-2 text-2xl">🎁</div>
+              
+              <div className="flex items-center justify-between mb-6 relative z-10">
+                <h2 className="font-bold text-lg text-blue-600 flex items-center gap-2">
+                  ❄️ Filters
+                </h2>
                 <button
                   onClick={handleResetFilters}
-                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1"
+                  className="text-sm text-blue-600 hover:text-blue-700 flex items-center gap-1 bg-blue-50 px-3 py-1 rounded-full hover:bg-blue-100 transition-colors"
                 >
                   <X className="w-4 h-4" />
                   Reset
@@ -155,8 +182,8 @@ const ProductPage = () => {
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-2 text-gray-700">
-                  Category
+                <label className="block text-sm font-semibold mb-2 text-blue-700 flex items-center gap-2">
+                  🎄 Category
                 </label>
                 <select
                   value={category}
@@ -164,7 +191,7 @@ const ProductPage = () => {
                     setCategory(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none bg-blue-50 hover:bg-blue-100 transition-colors"
                 >
                   <option value="">All categories</option>
                   {categories.map((c) => (
@@ -176,8 +203,8 @@ const ProductPage = () => {
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-2 text-gray-700">
-                  Brand
+                <label className="block text-sm font-semibold mb-2 text-blue-700 flex items-center gap-2">
+                  ⭐ Brand
                 </label>
                 <select
                   value={brand}
@@ -185,7 +212,7 @@ const ProductPage = () => {
                     setBrand(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none bg-blue-50 hover:bg-blue-100 transition-colors"
                 >
                   <option value="">All brands</option>
                   {brands.map((b) => (
@@ -197,8 +224,8 @@ const ProductPage = () => {
               </div>
 
               <div className="mb-6">
-                <label className="block text-sm font-semibold mb-2 text-gray-700">
-                  Sort by
+                <label className="block text-sm font-semibold mb-2 text-blue-700 flex items-center gap-2">
+                  🎀 Sort by
                 </label>
                 <select
                   value={sort}
@@ -206,7 +233,7 @@ const ProductPage = () => {
                     setSort(e.target.value);
                     setPage(1);
                   }}
-                  className="w-full px-3 py-2 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:outline-none"
+                  className="w-full px-3 py-2 border-2 border-blue-200 rounded-xl focus:ring-2 focus:ring-blue-400 focus:outline-none bg-blue-50 hover:bg-blue-100 transition-colors"
                 >
                   <option value="name">Name (A-Z)</option>
                   <option value="name_desc">Name (Z-A)</option>
@@ -218,16 +245,16 @@ const ProductPage = () => {
               </div>
 
               <div>
-                <label className="block text-sm font-semibold mb-2 text-gray-700">
-                  View
+                <label className="block text-sm font-semibold mb-2 text-blue-700 flex items-center gap-2">
+                  👁️ View
                 </label>
-                <div className="flex border rounded-lg overflow-hidden">
+                <div className="flex border-2 border-blue-200 rounded-xl overflow-hidden">
                   <button
                     onClick={() => setViewMode("grid")}
                     className={`flex-1 p-2 flex items-center justify-center transition-colors ${
                       viewMode === "grid"
-                        ? "bg-blue-600 text-white"
-                        : "bg-white hover:bg-gray-50"
+                        ? "bg-blue-400 text-white"
+                        : "bg-white hover:bg-blue-50"
                     }`}
                   >
                     <Grid className="w-5 h-5" />
@@ -236,28 +263,31 @@ const ProductPage = () => {
                     onClick={() => setViewMode("list")}
                     className={`flex-1 p-2 flex items-center justify-center transition-colors ${
                       viewMode === "list"
-                        ? "bg-blue-600 text-white"
-                        : "bg-white hover:bg-gray-50"
+                        ? "bg-blue-400 text-white"
+                        : "bg-white hover:bg-blue-50"
                     }`}
                   >
                     <List className="w-5 h-5" />
                   </button>
                 </div>
               </div>
+
+              {/* Bottom decoration */}
+              <div className="absolute bottom-2 left-1/2 -translate-x-1/2 text-2xl">⛄</div>
             </div>
           </aside>
 
           <main className="flex-1">
-            <div className="mb-4 text-sm text-gray-600">
+            <div className="mb-4 text-sm text-blue-700 font-semibold bg-white px-4 py-2 rounded-full inline-block shadow-md border-2 border-blue-200">
               {totalCount > 0 && (
-                <p>Showing {products.length} products</p>
+                <p>🎁 Showing {products.length} magical products</p>
               )}
             </div>
 
             {loading ? (
-              <div className="text-center text-gray-500 py-20">
-                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-                <p className="mt-4">Loading products...</p>
+              <div className="text-center text-blue-600 py-20">
+                <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-4 border-blue-400"></div>
+                <p className="mt-4 font-semibold">🎄 Loading Christmas products...</p>
               </div>
             ) : products.length ? (
               <div
@@ -278,14 +308,22 @@ const ProductPage = () => {
                 ))}
               </div>
             ) : (
-              <div className="text-center text-gray-500 py-20">
-                <p className="text-xl">No products found</p>
-                <p className="text-sm mt-2">Try adjusting your filters</p>
+              <div className="text-center text-blue-600 py-20 bg-white rounded-2xl shadow-xl border-4 border-blue-200">
+                <p className="text-4xl mb-4">🎅</p>
+                <p className="text-xl font-bold">No products found</p>
+                <p className="text-sm mt-2">Try adjusting your Christmas filters ✨</p>
               </div>
             )}
           </main>
         </div>
       </div>
+
+      <style>{`
+        @keyframes pulse {
+          0%, 100% { opacity: 0.4; transform: scale(1); }
+          50% { opacity: 1; transform: scale(1.1); }
+        }
+      `}</style>
     </div>
   );
 };
