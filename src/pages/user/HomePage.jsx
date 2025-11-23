@@ -1,84 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { Search, ChevronRight, TrendingUp, Tag, Zap, Shield, Truck, Star, Heart, ShoppingCart, Eye, ChevronLeft, Award, Sparkles, Flame, TrendingDown } from "lucide-react";
+import ProductCard from "../../components/ProductCard"; // Import your ProductCard component
 
-const ProductCard = ({ product }) => {
-  const hasDiscount = product.discount && product.discount > 0;
-  const discountedPrice = hasDiscount 
-    ? (product.price * (1 - product.discount / 100)).toFixed(2)
-    : product.price;
-
-  return (
-    <div className="group relative bg-white rounded-2xl overflow-hidden transition-all duration-500 hover:shadow-2xl border-4 border-blue-200">
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-50 to-blue-100 aspect-square">
-        <img 
-          src={product.imageUrl || "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80"} 
-          alt={product.name}
-          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700"
-        />
-        {hasDiscount && (
-          <div className="absolute top-4 left-4 bg-gradient-to-r from-red-500 to-red-600 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg flex items-center gap-1">
-            🎁 {product.discount}% OFF
-          </div>
-        )}
-        {product.isNew && (
-          <div className="absolute top-4 right-4 bg-gradient-to-r from-blue-400 to-blue-500 text-white px-4 py-2 rounded-full text-sm font-bold shadow-lg">
-            ✨ NEW
-          </div>
-        )}
-        
-        <div className="absolute inset-0 bg-gradient-to-t from-blue-900/60 via-blue-900/0 to-blue-900/0 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <div className="absolute bottom-4 left-0 right-0 flex justify-center gap-2">
-            <button className="bg-white text-blue-600 p-3 rounded-full hover:bg-blue-400 hover:text-white transition-all duration-300 shadow-lg">
-              <Heart size={20} />
-            </button>
-            <button className="bg-white text-blue-600 p-3 rounded-full hover:bg-blue-400 hover:text-white transition-all duration-300 shadow-lg">
-              <Eye size={20} />
-            </button>
-            <button className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-6 py-3 rounded-full hover:shadow-2xl transition-all duration-300 flex items-center gap-2 font-semibold">
-              <ShoppingCart size={20} />
-              Add to Cart
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      <div className="p-5 relative">
-        <div className="absolute top-2 right-2 text-xl">🎄</div>
-        <div className="flex items-center justify-between mb-2">
-          <span className="text-xs font-semibold text-blue-600 uppercase tracking-wider bg-blue-50 px-3 py-1 rounded-full border border-blue-200">
-            {product.brandName || "Electronics"}
-          </span>
-          <div className="flex items-center gap-1">
-            <span className="text-lg">⭐</span>
-            <span className="text-sm font-semibold text-gray-700">{product.rating || "4.5"}</span>
-          </div>
-        </div>
-        
-        <h3 className="font-bold text-gray-800 mb-3 line-clamp-2 h-12 text-lg group-hover:text-blue-500 transition-colors">
-          {product.name}
-        </h3>
-        
-        <div className="flex items-end justify-between">
-          <div>
-            <div className="flex items-baseline gap-2">
-              <span className="text-3xl font-bold bg-gradient-to-r from-blue-500 to-blue-600 bg-clip-text text-transparent">
-                ${discountedPrice}
-              </span>
-              {hasDiscount && (
-                <span className="text-sm text-gray-400 line-through">${product.price}</span>
-              )}
-            </div>
-            <p className="text-xs text-blue-600 font-medium mt-1 flex items-center gap-1">
-              🎁 Free Gift Wrap
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  );
-};
-
-const FeaturedSection = ({ title, subtitle, icon: Icon, products, gradient, iconColor }) => {
+const FeaturedSection = ({ title, subtitle, icon: Icon, products, gradient, iconColor, onProductClick }) => {
   if (!products || products.length === 0) return null;
 
   return (
@@ -90,11 +14,11 @@ const FeaturedSection = ({ title, subtitle, icon: Icon, products, gradient, icon
             <Icon className="text-white" size={32} />
           </div>
           <div>
-            <h2 className="text-4xl font-black text-blue-800">{title}</h2>
-            <p className="text-blue-600 mt-1">{subtitle}</p>
+            <h2 className="text-4xl font-black text-red-800">{title}</h2>
+            <p className="text-green-600 mt-1">{subtitle}</p>
           </div>
         </div>
-        <button className="text-blue-500 hover:text-blue-600 font-semibold flex items-center gap-2 group bg-blue-50 px-6 py-3 rounded-full hover:bg-blue-100 transition-all border-2 border-blue-200">
+        <button className="text-red-600 hover:text-green-600 font-semibold flex items-center gap-2 group bg-red-50 px-6 py-3 rounded-full hover:bg-green-50 transition-all border-2 border-red-200">
           View All
           <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
         </button>
@@ -102,7 +26,7 @@ const FeaturedSection = ({ title, subtitle, icon: Icon, products, gradient, icon
 
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
         {products.slice(0, 4).map((product) => (
-          <ProductCard key={product.id} product={product} />
+          <ProductCard key={product.id} product={product} onClick={onProductClick} />
         ))}
       </div>
     </div>
@@ -111,6 +35,10 @@ const FeaturedSection = ({ title, subtitle, icon: Icon, products, gradient, icon
 
 const HomePage = () => {
   const [allProducts, setAllProducts] = useState([]);
+  const [brands, setBrands] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [selectedBrand, setSelectedBrand] = useState(null);
+  const [selectedCategory, setSelectedCategory] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
   const [currentSlide, setCurrentSlide] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -125,28 +53,28 @@ const HomePage = () => {
 
   const heroSlides = [
     {
-      image: "https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=1200&q=80",
-      title: "Premium Electronics",
-      subtitle: "Elevate Your Tech Experience",
-      discount: "🎄 Up to 40% OFF"
+      image: "https://images.unsplash.com/photo-1512389142860-9c449e58a543?w=1200&q=80",
+      title: "🎄 Christmas Electronics",
+      subtitle: "Perfect Gifts for Tech Lovers",
+      discount: "🎁 Up to 40% OFF"
     },
     {
-      image: "https://images.unsplash.com/photo-1491553895911-0055eca6402d?w=1200&q=80",
-      title: "Wireless Audio",
-      subtitle: "Crystal Clear Sound Quality",
-      discount: "🎁 Limited Edition"
+      image: "https://images.unsplash.com/photo-1545558014-8692077e9b5c?w=1200&q=80",
+      title: "🎅 Holiday Special",
+      subtitle: "Premium Audio Experience",
+      discount: "⛄ Limited Edition"
     },
     {
-      image: "https://images.unsplash.com/photo-1572635196237-14b3f281503f?w=1200&q=80",
-      title: "Smart Devices",
-      subtitle: "Future of Technology",
-      discount: "⛄ New Arrival"
+      image: "https://images.unsplash.com/photo-1483985988355-763728e1935b?w=1200&q=80",
+      title: "❄️ Winter Collection",
+      subtitle: "Smart Devices for Everyone",
+      discount: "🎄 New Arrival"
     },
     {
-      image: "https://images.unsplash.com/photo-1468495244123-6c6c332eeece?w=1200&q=80",
-      title: "Gaming Gear",
-      subtitle: "Level Up Your Game",
-      discount: "❄️ Save Big"
+      image: "https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=1200&q=80",
+      title: "🎁 Gift Guide 2024",
+      subtitle: "Find the Perfect Present",
+      discount: "🎅 Save Big"
     }
   ];
 
@@ -165,22 +93,81 @@ const HomePage = () => {
     setCurrentSlide((prev) => (prev - 1 + heroSlides.length) % heroSlides.length);
   };
 
+  // Fetch Brands
+  useEffect(() => {
+    const fetchBrands = async () => {
+      try {
+        const res = await fetch("https://localhost:7165/api/Brand");
+        if (!res.ok) throw new Error("Failed to fetch brands");
+        const data = await res.json();
+        setBrands(data || []);
+      } catch (error) {
+        console.error("Error fetching brands:", error);
+        setBrands([]);
+      }
+    };
+    fetchBrands();
+  }, []);
+
+  // Fetch Categories
+  useEffect(() => {
+    const fetchCategories = async () => {
+      try {
+        const res = await fetch("https://localhost:7165/api/Categories");
+        if (!res.ok) throw new Error("Failed to fetch categories");
+        const data = await res.json();
+        setCategories(data || []);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setCategories([]);
+      }
+    };
+    fetchCategories();
+  }, []);
+
+  // Fetch Products
   useEffect(() => {
     const fetchProducts = async () => {
       setIsLoading(true);
       try {
         const res = await fetch("https://localhost:7165/api/FeaturedProduct");
-
         if (!res.ok) throw new Error("Failed to fetch products");
-
         const data = await res.json();
         
-        let filteredProducts = data || [];
+        // Remove duplicate products (same name + brand)
+        const uniqueProducts = [];
+        const seenProducts = new Set();
+        
+        for (const product of data) {
+          const key = `${product.name}-${product.brandName}`;
+          if (!seenProducts.has(key)) {
+            seenProducts.add(key);
+            uniqueProducts.push(product);
+          }
+        }
+        
+        let filteredProducts = uniqueProducts;
+        
+        // Filter by search term
         if (searchTerm) {
           filteredProducts = filteredProducts.filter(product =>
             product.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             product.brandName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             product.description?.toLowerCase().includes(searchTerm.toLowerCase())
+          );
+        }
+        
+        // Filter by brand
+        if (selectedBrand) {
+          filteredProducts = filteredProducts.filter(product => 
+            product.brandName === selectedBrand
+          );
+        }
+        
+        // Filter by category
+        if (selectedCategory) {
+          filteredProducts = filteredProducts.filter(product => 
+            product.categoryName === selectedCategory
           );
         }
         
@@ -198,7 +185,7 @@ const HomePage = () => {
     }, 300);
 
     return () => clearTimeout(debounce);
-  }, [searchTerm]);
+  }, [searchTerm, selectedBrand, selectedCategory]);
 
   const getProductsByType = (type) => {
     return allProducts.filter(product => product.featuredType === type);
@@ -209,26 +196,31 @@ const HomePage = () => {
   const popularProducts = getProductsByType(FEATURED_TYPES.POPULAR);
   const saleProducts = getProductsByType(FEATURED_TYPES.SALE);
 
+  const handleProductClick = (product) => {
+    // Navigate to product detail page
+    window.location.href = `/product/${product.id}`;
+  };
+
   const features = [
-    { icon: Truck, title: "Free Delivery", desc: "Orders over $50", color: "from-blue-400 to-blue-500", emoji: "🎁" },
-    { icon: Shield, title: "Secure Payment", desc: "100% protected", color: "from-blue-300 to-blue-400", emoji: "🔒" },
-    { icon: Zap, title: "Fast Shipping", desc: "2-3 days delivery", color: "from-blue-500 to-cyan-400", emoji: "⚡" },
-    { icon: Tag, title: "Best Prices", desc: "Price match guarantee", color: "from-cyan-400 to-blue-400", emoji: "🎄" },
+    { icon: Truck, title: "Free Delivery", desc: "Orders over $50", color: "from-red-400 to-red-500", emoji: "🎁" },
+    { icon: Shield, title: "Secure Payment", desc: "100% protected", color: "from-green-400 to-green-500", emoji: "🔒" },
+    { icon: Zap, title: "Fast Shipping", desc: "2-3 days delivery", color: "from-red-500 to-green-500", emoji: "⚡" },
+    { icon: Tag, title: "Best Prices", desc: "Price match guarantee", color: "from-green-500 to-red-500", emoji: "🎄" },
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-blue-50 relative overflow-hidden">
+    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-green-50 relative overflow-hidden">
       {/* Snowflakes background */}
       <div className="fixed inset-0 pointer-events-none overflow-hidden">
-        <div className="absolute top-20 left-10 text-blue-200 text-5xl animate-pulse">❄️</div>
-        <div className="absolute top-40 right-20 text-blue-300 text-4xl animate-pulse" style={{animationDelay: '1s'}}>❄️</div>
-        <div className="absolute top-60 left-1/4 text-blue-200 text-3xl animate-pulse" style={{animationDelay: '2s'}}>❄️</div>
-        <div className="absolute bottom-40 right-1/3 text-blue-300 text-6xl animate-pulse" style={{animationDelay: '0.5s'}}>❄️</div>
-        <div className="absolute bottom-60 left-1/3 text-blue-200 text-4xl animate-pulse" style={{animationDelay: '1.5s'}}>❄️</div>
+        <div className="absolute top-20 left-10 text-red-200 text-5xl animate-pulse">❄️</div>
+        <div className="absolute top-40 right-20 text-green-300 text-4xl animate-pulse" style={{animationDelay: '1s'}}>❄️</div>
+        <div className="absolute top-60 left-1/4 text-red-200 text-3xl animate-pulse" style={{animationDelay: '2s'}}>❄️</div>
+        <div className="absolute bottom-40 right-1/3 text-green-300 text-6xl animate-pulse" style={{animationDelay: '0.5s'}}>❄️</div>
+        <div className="absolute bottom-60 left-1/3 text-red-200 text-4xl animate-pulse" style={{animationDelay: '1.5s'}}>❄️</div>
       </div>
 
       {/* Hero Slider Section */}
-      <div className="relative h-[600px] overflow-hidden bg-gradient-to-br from-blue-400 via-blue-300 to-cyan-400">
+      <div className="relative h-[600px] overflow-hidden bg-gradient-to-br from-red-600 via-green-600 to-red-600">
         <div className="absolute top-0 left-0 right-0 flex justify-center gap-12 text-6xl z-10 pt-4 opacity-30">
           <span>🎄</span>
           <span>🎅</span>
@@ -245,7 +237,7 @@ const HomePage = () => {
                 : 'opacity-0 scale-110'
             }`}
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-900/70 via-blue-800/50 to-transparent z-10"></div>
+            <div className="absolute inset-0 bg-gradient-to-r from-red-900/70 via-green-900/50 to-transparent z-10"></div>
             <img 
               src={slide.image} 
               alt={slide.title}
@@ -267,11 +259,11 @@ const HomePage = () => {
                   <h1 className="text-7xl font-black mb-4 text-white leading-tight drop-shadow-2xl">
                     {slide.title}
                   </h1>
-                  <p className="text-3xl text-blue-100 mb-8 font-light drop-shadow-lg">
+                  <p className="text-3xl text-green-100 mb-8 font-light drop-shadow-lg">
                     {slide.subtitle}
                   </p>
                   <div className="flex gap-4">
-                    <button className="bg-gradient-to-r from-blue-400 to-blue-500 hover:from-blue-500 hover:to-blue-600 text-white px-10 py-4 rounded-full font-bold shadow-2xl hover:shadow-blue-400/50 transition-all text-lg">
+                    <button className="bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white px-10 py-4 rounded-full font-bold shadow-2xl hover:shadow-red-400/50 transition-all text-lg">
                       🎁 Shop Now
                     </button>
                     <button className="bg-white/20 backdrop-blur-md hover:bg-white/30 text-white px-10 py-4 rounded-full font-bold border-2 border-white/40 transition-all text-lg">
@@ -311,13 +303,13 @@ const HomePage = () => {
           ))}
         </div>
 
-        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-blue-50 to-transparent"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-20 bg-gradient-to-t from-red-50 to-transparent"></div>
       </div>
 
       {/* Search Bar Section */}
       <div className="relative -mt-8 z-40">
         <div className="max-w-4xl mx-auto px-6">
-          <div className="bg-white rounded-3xl shadow-2xl p-3 border-4 border-blue-200">
+          <div className="bg-white rounded-3xl shadow-2xl p-3 border-4 border-red-200">
             <div className="flex gap-2">
               <div className="flex-1 relative">
                 <span className="absolute left-6 top-1/2 -translate-y-1/2 text-2xl">🔍</span>
@@ -326,10 +318,10 @@ const HomePage = () => {
                   placeholder="Search for Christmas gifts, gadgets, and more..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="w-full pl-16 pr-6 py-4 text-gray-800 text-lg focus:outline-none rounded-2xl bg-blue-50"
+                  className="w-full pl-16 pr-6 py-4 text-gray-800 text-lg focus:outline-none rounded-2xl bg-red-50"
                 />
               </div>
-              <button className="bg-gradient-to-r from-blue-400 to-blue-500 text-white px-10 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:from-blue-500 hover:to-blue-600">
+              <button className="bg-gradient-to-r from-red-600 to-green-600 text-white px-10 py-4 rounded-2xl font-bold shadow-lg hover:shadow-xl transition-all hover:from-red-700 hover:to-green-700">
                 <Search size={24} />
               </button>
             </div>
@@ -337,17 +329,96 @@ const HomePage = () => {
         </div>
       </div>
 
+      {/* Brands Section */}
+      {brands.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">🏷️</span>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent">
+              Shop by Brand
+            </h2>
+          </div>
+          <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide">
+            <button
+              onClick={() => setSelectedBrand(null)}
+              className={`px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all border-2 ${
+                selectedBrand === null
+                  ? 'bg-gradient-to-r from-red-600 to-green-600 text-white border-transparent shadow-lg'
+                  : 'bg-white text-gray-700 border-red-200 hover:border-red-400'
+              }`}
+            >
+              All Brands
+            </button>
+            {brands.map((brand) => (
+              <button
+                key={brand.brandId}
+                onClick={() => setSelectedBrand(brand.brandName)}
+                className={`px-6 py-3 rounded-full font-semibold whitespace-nowrap transition-all border-2 flex items-center gap-2 ${
+                  selectedBrand === brand.brandName
+                    ? 'bg-gradient-to-r from-red-600 to-green-600 text-white border-transparent shadow-lg'
+                    : 'bg-white text-gray-700 border-red-200 hover:border-red-400'
+                }`}
+              >
+                {brand.logoUrl && (
+                  <img src={brand.logoUrl} alt={brand.brandName} className="w-5 h-5 rounded" />
+                )}
+                {brand.brandName}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Categories Section */}
+      {categories.length > 0 && (
+        <div className="max-w-7xl mx-auto px-6 pb-12 relative z-10">
+          <div className="flex items-center gap-3 mb-6">
+            <span className="text-3xl">📦</span>
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-red-600 bg-clip-text text-transparent">
+              Shop by Category
+            </h2>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-4">
+            <button
+              onClick={() => setSelectedCategory(null)}
+              className={`p-6 rounded-2xl font-semibold transition-all border-4 text-center ${
+                selectedCategory === null
+                  ? 'bg-gradient-to-br from-green-600 to-red-600 text-white border-transparent shadow-xl'
+                  : 'bg-white text-gray-700 border-green-200 hover:border-green-400'
+              }`}
+            >
+              <div className="text-3xl mb-2">🎁</div>
+              All
+            </button>
+            {categories.map((category) => (
+              <button
+                key={category.categoryId}
+                onClick={() => setSelectedCategory(category.categoryName)}
+                className={`p-6 rounded-2xl font-semibold transition-all border-4 text-center ${
+                  selectedCategory === category.categoryName
+                    ? 'bg-gradient-to-br from-green-600 to-red-600 text-white border-transparent shadow-xl'
+                    : 'bg-white text-gray-700 border-green-200 hover:border-green-400'
+                }`}
+              >
+                <div className="text-3xl mb-2">📱</div>
+                {category.categoryName}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Features */}
-      <div className="max-w-7xl mx-auto px-6 py-16 relative z-10">
+      <div className="max-w-7xl mx-auto px-6 py-12 relative z-10">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
           {features.map((feature, idx) => (
-            <div key={idx} className="bg-white rounded-2xl p-8 text-center hover:shadow-xl transition-all border-4 border-blue-200 group relative overflow-hidden">
+            <div key={idx} className="bg-white rounded-2xl p-8 text-center hover:shadow-xl transition-all border-4 border-red-200 group relative overflow-hidden">
               <div className="absolute top-2 right-2 text-2xl opacity-50">{feature.emoji}</div>
               <div className={`inline-flex p-5 rounded-2xl bg-gradient-to-r ${feature.color} mb-4 group-hover:scale-110 transition-transform shadow-lg`}>
                 <feature.icon className="text-white" size={32} />
               </div>
-              <h3 className="font-bold text-blue-800 mb-2 text-lg">{feature.title}</h3>
-              <p className="text-sm text-blue-600">{feature.desc}</p>
+              <h3 className="font-bold text-red-800 mb-2 text-lg">{feature.title}</h3>
+              <p className="text-sm text-green-600">{feature.desc}</p>
             </div>
           ))}
         </div>
@@ -356,18 +427,18 @@ const HomePage = () => {
       {/* Featured Products Sections */}
       <div className="max-w-7xl mx-auto px-6 pb-16 relative z-10">
         {isLoading ? (
-          <div className="text-center py-32 bg-white rounded-3xl shadow-xl border-4 border-blue-200 relative overflow-hidden">
+          <div className="text-center py-32 bg-white rounded-3xl shadow-xl border-4 border-red-200 relative overflow-hidden">
             <div className="absolute top-4 left-4 text-4xl">🎄</div>
             <div className="absolute top-4 right-4 text-4xl">🎄</div>
-            <div className="animate-spin inline-block w-12 h-12 border-4 border-blue-400 border-t-transparent rounded-full mb-4"></div>
-            <h3 className="text-2xl font-bold text-blue-800 mb-2">🎅 Loading Christmas Products...</h3>
-            <p className="text-blue-600">Please wait a moment</p>
+            <div className="animate-spin inline-block w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full mb-4"></div>
+            <h3 className="text-2xl font-bold text-red-800 mb-2">🎅 Loading Christmas Products...</h3>
+            <p className="text-green-600">Please wait a moment</p>
           </div>
         ) : allProducts.length === 0 ? (
-          <div className="text-center py-32 bg-white rounded-3xl shadow-xl border-4 border-blue-200">
+          <div className="text-center py-32 bg-white rounded-3xl shadow-xl border-4 border-red-200">
             <div className="text-7xl mb-6">⛄</div>
-            <h3 className="text-2xl font-bold text-blue-800 mb-2">No products found</h3>
-            <p className="text-blue-600">Try adjusting your search or check back later</p>
+            <h3 className="text-2xl font-bold text-red-800 mb-2">No products found</h3>
+            <p className="text-green-600">Try adjusting your filters or check back later</p>
           </div>
         ) : (
           <>
@@ -376,7 +447,8 @@ const HomePage = () => {
               subtitle="Top rated by customers • Most purchased"
               icon={Award}
               products={bestSellerProducts}
-              gradient="from-blue-400 to-blue-500"
+              gradient="from-red-600 to-green-600"
+              onProductClick={handleProductClick}
             />
 
             <FeaturedSection
@@ -384,7 +456,8 @@ const HomePage = () => {
               subtitle="Fresh products • Just landed"
               icon={Sparkles}
               products={newProducts}
-              gradient="from-cyan-400 to-blue-400"
+              gradient="from-green-600 to-red-600"
+              onProductClick={handleProductClick}
             />
 
             <FeaturedSection
@@ -392,7 +465,8 @@ const HomePage = () => {
               subtitle="Trending now • Most viewed"
               icon={Flame}
               products={popularProducts}
-              gradient="from-blue-300 to-blue-400"
+              gradient="from-red-500 to-green-500"
+              onProductClick={handleProductClick}
             />
 
             <FeaturedSection
@@ -400,14 +474,15 @@ const HomePage = () => {
               subtitle="Limited time offers • Huge discounts"
               icon={TrendingDown}
               products={saleProducts}
-              gradient="from-blue-500 to-cyan-500"
+              gradient="from-green-600 to-red-600"
+              onProductClick={handleProductClick}
             />
           </>
         )}
       </div>
 
       {/* Newsletter Section */}
-      <div className="relative overflow-hidden bg-gradient-to-br from-blue-400 via-blue-300 to-cyan-400 mt-20">
+      <div className="relative overflow-hidden bg-gradient-to-br from-red-600 via-green-600 to-red-600 mt-20">
         <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PGRlZnM+PHBhdHRlcm4gaWQ9ImdyaWQiIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgcGF0dGVyblVuaXRzPSJ1c2VyU3BhY2VPblVzZSI+PHBhdGggZD0iTSAxMCAwIEwgMCAwIDAgMTAiIGZpbGw9Im5vbmUiIHN0cm9rZT0id2hpdGUiIHN0cm9rZS1vcGFjaXR5PSIwLjEiIHN0cm9rZS13aWR0aD0iMSIvPjwvcGF0dGVybj48L2RlZnM+PHJlY3Qgd2lkdGg9IjEwMCUiIGhlaWdodD0iMTAwJSIgZmlsbD0idXJsKCNncmlkKSIvPjwvc3ZnPg==')] opacity-40"></div>
         
         <div className="absolute top-10 left-10 text-6xl animate-pulse">🎄</div>
@@ -420,7 +495,7 @@ const HomePage = () => {
             <span className="text-6xl">🎅</span>
           </div>
           <h2 className="text-5xl font-black mb-6 text-white drop-shadow-lg">🎄 Get VIP Christmas Access</h2>
-          <p className="text-xl text-blue-50 mb-10 drop-shadow-md">
+          <p className="text-xl text-red-50 mb-10 drop-shadow-md">
             Join 50,000+ smart shoppers and get <span className="font-bold text-white bg-red-500 px-3 py-1 rounded-full">🎁 20% off</span> your first order
           </p>
           <div className="max-w-lg mx-auto">
@@ -428,14 +503,14 @@ const HomePage = () => {
               <input
                 type="email"
                 placeholder="Enter your email address"
-                className="flex-1 px-6 py-4 rounded-xl text-gray-800 bg-white focus:outline-none focus:ring-4 focus:ring-blue-200"
+                className="flex-1 px-6 py-4 rounded-xl text-gray-800 bg-white focus:outline-none focus:ring-4 focus:ring-red-200"
               />
               <button className="bg-gradient-to-r from-red-500 to-red-600 hover:from-red-600 hover:to-red-700 text-white px-8 py-4 rounded-xl font-bold shadow-lg hover:shadow-xl transition-all whitespace-nowrap">
                 🎁 Subscribe Now
               </button>
             </div>
           </div>
-          <p className="text-blue-100 text-sm mt-6 flex items-center justify-center gap-2">
+          <p className="text-red-100 text-sm mt-6 flex items-center justify-center gap-2">
             <span>🔒</span> Your data is 100% secure. Unsubscribe anytime.
           </p>
         </div>
@@ -445,6 +520,13 @@ const HomePage = () => {
         @keyframes pulse {
           0%, 100% { opacity: 0.4; transform: scale(1); }
           50% { opacity: 1; transform: scale(1.1); }
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+          display: none;
+        }
+        .scrollbar-hide {
+          -ms-overflow-style: none;
+          scrollbar-width: none;
         }
       `}</style>
     </div>

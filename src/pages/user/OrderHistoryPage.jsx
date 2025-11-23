@@ -39,7 +39,13 @@ const OrderHistoryPage = () => {
 
         if (!response.ok) throw new Error("Failed to fetch order history.");
         const data = await response.json();
-        setOrders(data);
+        // Sort orders by orderDate in descending order (newest first)
+        const sortedData = data.sort((a, b) => {
+          const dateA = new Date(a.orderDate);
+          const dateB = new Date(b.orderDate);
+          return dateB.getTime() - dateA.getTime();
+        });
+        setOrders(sortedData);
       } catch (err) {
         setError(err.message);
       } finally {

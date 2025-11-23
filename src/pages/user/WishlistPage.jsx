@@ -1,5 +1,6 @@
 import { useWishlist } from "../../hooks/useWishlist";
 import ProductCard from "../../components/ProductCard";
+import { toast } from 'react-toastify';
 
 export default function WishlistPage() {
   const { wishlist } = useWishlist();

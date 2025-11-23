@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { clearCart } from "../../services/cartService"; // ⚡️ Import thêm
+import { clearCart } from "../../services/cartService";
 
 export default function OrderSuccessPage() {
   const navigate = useNavigate();
@@ -13,51 +13,150 @@ export default function OrderSuccessPage() {
     const message = params.get("message");
 
     if (resultCode === "0") {
-      // ✅ Xóa giỏ hàng khi thanh toán thành công (MoMo redirect về)
       clearCart();
-
-      // ✅ Hiển thị thông tin đơn hàng
       setOrderInfo({
         orderId,
-        message: decodeURIComponent(message || "Thanh toán thành công!"),
+        message: decodeURIComponent(message || "Payment successful!"),
       });
     } else {
-      // ❌ Nếu thanh toán thất bại → quay lại giỏ hàng
       navigate("/cart");
     }
   }, [navigate]);
 
-  // 🧭 Xử lý khi nhấn "Xem đơn hàng của bạn"
   const handleViewOrder = () => {
-    // 💡 Dùng replace để reload lại trang cart, đảm bảo đọc localStorage mới nhất
-    window.location.replace("/cart");
+    navigate("/orders");
   };
 
-  if (!orderInfo) return <div className="text-center mt-10">Đang xử lý...</div>;
+  if (!orderInfo)
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-red-900 via-green-900 to-red-900 flex items-center justify-center">
+        <div className="text-white text-2xl">Processing...</div>
+      </div>
+    );
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-gray-50">
-      <div className="bg-white p-8 rounded-2xl shadow-md text-center max-w-md">
-        <h1 className="text-3xl font-bold text-green-600 mb-4">
-          🎉 Thanh toán thành công!
+    <div className="min-h-screen bg-gradient-to-b from-red-900 via-green-900 to-red-900 flex items-center justify-center p-4 relative overflow-hidden">
+      {/* Snowflakes Animation */}
+      <div className="absolute inset-0 pointer-events-none">
+        {[...Array(50)].map((_, i) => (
+          <div
+            key={i}
+            className="absolute text-white opacity-70 animate-fall"
+            style={{
+              left: `${Math.random() * 100}%`,
+              animationDelay: `${Math.random() * 5}s`,
+              animationDuration: `${5 + Math.random() * 10}s`,
+              fontSize: `${10 + Math.random() * 10}px`,
+            }}
+          >
+            ❄
+          </div>
+        ))}
+      </div>
+
+      <style>
+        {`
+          @keyframes fall {
+            0% {
+              transform: translateY(-100px) rotate(0deg);
+            }
+            100% {
+              transform: translateY(100vh) rotate(360deg);
+            }
+          }
+          .animate-fall {
+            animation: fall linear infinite;
+          }
+          @keyframes bounce {
+            0%, 100% {
+              transform: translateY(0);
+            }
+            50% {
+              transform: translateY(-20px);
+            }
+          }
+          .animate-bounce-slow {
+            animation: bounce 2s ease-in-out infinite;
+          }
+        `}
+      </style>
+
+      <div className="max-w-2xl w-full bg-white rounded-3xl shadow-2xl p-8 md:p-12 relative z-10 border-8 border-red-600">
+        {/* Christmas Decorations */}
+        <div className="absolute -top-6 left-1/2 transform -translate-x-1/2 text-6xl animate-bounce-slow">
+          🎅
+        </div>
+        
+        <div className="absolute top-4 left-4 text-3xl">🎄</div>
+        <div className="absolute top-4 right-4 text-3xl">🎄</div>
+        <div className="absolute bottom-4 left-8 text-2xl">🎁</div>
+        <div className="absolute bottom-4 right-8 text-2xl">🎁</div>
+
+        {/* Success Icon */}
+        <div className="flex justify-center mb-6 mt-8">
+          <div className="w-24 h-24 bg-gradient-to-br from-green-400 to-green-600 rounded-full flex items-center justify-center shadow-lg animate-bounce-slow">
+            <svg
+              className="w-12 h-12 text-white"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={3}
+                d="M5 13l4 4L19 7"
+              />
+            </svg>
+          </div>
+        </div>
+
+        {/* Title */}
+        <h1 className="text-4xl md:text-5xl font-bold text-center mb-4 bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent">
+          🎉 Order Successful! 🎉
         </h1>
 
-        <p className="text-gray-700 mb-2">
-          Cảm ơn bạn đã mua hàng tại <b>ElectroShop</b> 💙
+        {/* Subtitle */}
+        <p className="text-center text-gray-700 text-lg mb-8 font-medium">
+          Thank you for shopping at <span className="text-red-600 font-bold">TechStore</span> 🎄✨
         </p>
 
-        <p className="text-gray-600">
-          Mã đơn hàng: <b>{orderInfo.orderId}</b>
-        </p>
+        {/* Order Info Card */}
+        <div className="bg-gradient-to-br from-red-50 to-green-50 rounded-2xl p-6 mb-8 border-2 border-red-200 shadow-inner">
+          <div className="mb-4">
+            <p className="text-sm text-gray-600 mb-1 font-semibold">Order ID:</p>
+            <p className="text-2xl font-bold text-red-700">{orderInfo.orderId}</p>
+          </div>
+          <div>
+            <p className="text-sm text-gray-600 mb-1 font-semibold">Status:</p>
+            <p className="text-lg text-green-700 font-medium">{orderInfo.message}</p>
+          </div>
+        </div>
 
-        <p className="text-gray-500 mt-2">{orderInfo.message}</p>
+        {/* Christmas Message */}
+        <div className="bg-gradient-to-r from-red-100 to-green-100 rounded-xl p-4 mb-8 text-center border-2 border-dashed border-red-300">
+          <p className="text-gray-700 font-medium">
+            🎅 Wishing you a Merry Christmas and a Happy New Year! 🎄
+          </p>
+        </div>
 
+        {/* Action Button */}
         <button
           onClick={handleViewOrder}
-          className="mt-6 bg-green-500 text-black px-6 py-2 rounded-lg hover:bg-green-600 transition"
+          className="w-full bg-gradient-to-r from-red-600 to-green-600 hover:from-red-700 hover:to-green-700 text-white font-bold py-4 px-8 rounded-xl text-lg shadow-lg transform transition hover:scale-105 hover:shadow-xl"
         >
-          Xem đơn hàng của bạn
+          🎁 View Your Orders
         </button>
+
+        {/* Back to Home Link */}
+        <div className="text-center mt-6">
+          <button
+            onClick={() => navigate("/")}
+            className="text-red-600 hover:text-green-600 font-semibold underline transition"
+          >
+            ← Continue Shopping
+          </button>
+        </div>
       </div>
     </div>
   );

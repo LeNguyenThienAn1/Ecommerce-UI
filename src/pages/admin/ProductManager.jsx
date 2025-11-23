@@ -274,82 +274,143 @@ export default function ProductManager() {
         </div>
       </div>
 
-      {/* Table */}
-<div className="bg-white shadow rounded-lg overflow-hidden">
-  {Object.entries(
-    products.reduce((acc, product) => {
-      const key = product.name.trim().toLowerCase(); // gom theo tên
-      if (!acc[key]) acc[key] = [];
-      acc[key].push(product);
-      return acc;
-    }, {})
-  ).map(([key, group]) => {
-    const first = group[0];
-    const categoryName = getCategoryName(first.categoryId);
-    const brandName = getBrandName(first.brandId);
+      {/* Product List */}
+      <div className="bg-white shadow rounded-lg overflow-hidden">
+        {/* Table for large screens */}
+        <div className="hidden md:block">
+          {Object.entries(
+            products.reduce((acc, product) => {
+              const key = product.name.trim().toLowerCase(); // gom theo tên
+              if (!acc[key]) acc[key] = [];
+              acc[key].push(product);
+              return acc;
+            }, {})
+          ).map(([key, group]) => {
+            const first = group[0];
+            const categoryName = getCategoryName(first.categoryId);
+            const brandName = getBrandName(first.brandId);
 
-    return (
-      <div key={key} className="border-b border-gray-200">
-        {/* Header nhóm */}
-        <div className="bg-gray-100 px-6 py-3 font-semibold text-gray-800 flex justify-between items-center">
-          <span>
-            {first.name} ({group.length} biến thể)
-          </span>
-          <span className="text-sm text-gray-600">
-            {categoryName} — {brandName}
-          </span>
+            return (
+              <div key={key} className="border-b border-gray-200">
+                {/* Header nhóm */}
+                <div className="bg-gray-100 px-6 py-3 font-semibold text-gray-800 flex justify-between items-center">
+                  <span>
+                    {first.name} ({group.length} biến thể)
+                  </span>
+                  <span className="text-sm text-gray-600">
+                    {categoryName} — {brandName}
+                  </span>
+                </div>
+
+                <table className="w-full">
+                  <thead className="bg-gray-50">
+                    <tr>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
+                      <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="bg-white divide-y divide-gray-200">
+                    {group.map((p) => (
+                      <tr key={p.id} className="hover:bg-gray-50">
+                        <td className="px-6 py-4 whitespace-nowrap">
+                          {p.imageUrl && (
+                            <img
+                              className="h-10 w-10 rounded-lg object-cover"
+                              src={p.imageUrl}
+                              alt={p.name}
+                              onError={(e) => (e.target.style.display = "none")}
+                            />
+                          )}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${p.price}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.stock || 0}</td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                          <button
+                            className="text-indigo-600 hover:text-indigo-900 mr-3"
+                            onClick={() => handleOpenModal(p)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            className="text-red-600 hover:text-red-900"
+                            onClick={() => handleDelete(p.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            );
+          })}
         </div>
-
-        <table className="w-full">
-          <thead className="bg-gray-50">
-            <tr>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Image</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Price</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Brand</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Stock</th>
-              <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Actions</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {group.map((p) => (
-              <tr key={p.id} className="hover:bg-gray-50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  {p.imageUrl && (
-                    <img
-                      className="h-10 w-10 rounded-lg object-cover"
-                      src={p.imageUrl}
-                      alt={p.name}
-                      onError={(e) => (e.target.style.display = "none")}
-                    />
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">${p.price}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getCategoryName(p.categoryId)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{getBrandName(p.brandId)}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{p.stock || 0}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    className="text-indigo-600 hover:text-indigo-900 mr-3"
-                    onClick={() => handleOpenModal(p)}
-                  >
-                    Edit
-                  </button>
-                  <button
-                    className="text-red-600 hover:text-red-900"
-                    onClick={() => handleDelete(p.id)}
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        
+        {/* Cards for small screens */}
+        <div className="md:hidden">
+        {Object.entries(
+            products.reduce((acc, product) => {
+              const key = product.name.trim().toLowerCase(); // gom theo tên
+              if (!acc[key]) acc[key] = [];
+              acc[key].push(product);
+              return acc;
+            }, {})
+          ).map(([key, group]) => {
+            const first = group[0];
+            const categoryName = getCategoryName(first.categoryId);
+            const brandName = getBrandName(first.brandId);
+            return (
+            <div key={key} className="border-b border-gray-200">
+              <div className="bg-gray-100 px-4 py-3 font-semibold text-gray-800 flex justify-between items-center">
+                <span>
+                  {first.name} ({group.length})
+                </span>
+                <span className="text-sm text-gray-600">
+                  {categoryName}
+                </span>
+              </div>
+              <div className="divide-y divide-gray-200">
+              {group.map(p => (
+                <div key={p.id} className="p-4">
+                  <div className="flex items-center gap-4">
+                    {p.imageUrl && (
+                      <img
+                        className="h-16 w-16 rounded-lg object-cover"
+                        src={p.imageUrl}
+                        alt={p.name}
+                        onError={(e) => (e.target.style.display = "none")}
+                      />
+                    )}
+                    <div className="flex-1">
+                      <div className="font-bold">${p.price}</div>
+                      <div className="text-sm text-gray-500">Stock: {p.stock || 0}</div>
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <button
+                        className="text-indigo-600 hover:text-indigo-900 text-sm"
+                        onClick={() => handleOpenModal(p)}
+                      >
+                        Edit
+                      </button>
+                      <button
+                        className="text-red-600 hover:text-red-900 text-sm"
+                        onClick={() => handleDelete(p.id)}
+                      >
+                        Delete
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              ))}
+              </div>
+            </div>
+            )
+          })}
+        </div>
       </div>
-    );
-  })}
-</div>
 
       {/* Pagination */}
       <div className="flex justify-between items-center mt-6">

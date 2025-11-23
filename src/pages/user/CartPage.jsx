@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useNavigate } from "react-router-dom";
+import { toast } from 'react-toastify';
 import {
   getCart,
   updateQuantity,
@@ -7,6 +8,7 @@ import {
   clearCart,
 } from "../../services/cartService";
 import { useAuth } from "../../context/AuthContext";
+import { ShoppingBag, Plus, Minus, Trash2, CreditCard, Package, Gift, Sparkles } from "lucide-react";
 
 export default function CartPage() {
   const { user, isAuthenticated, loading: authLoading } = useAuth();
@@ -24,54 +26,53 @@ export default function CartPage() {
     note: "",
   });
 
- // --- Xác nhận thanh toán MoMo ---
-const handleMomoSuccessConfirmation = useCallback(async (orderId, resultCode) => {
-  const token = localStorage.getItem("accessToken");
-  const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
+  // --- MoMo Success Confirmation ---
+  const handleMomoSuccessConfirmation = useCallback(async (orderId, resultCode) => {
+    const token = localStorage.getItem("accessToken");
+    const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 
-  if (!user || !user.id || user.id === EMPTY_GUID) {
-    alert("Lỗi thông tin người dùng. Vui lòng đăng nhập lại.");
-    navigate("/login");
-    return;
-  }
-
-  if (!token) {
-    alert("Lỗi xác thực. Vui lòng đăng nhập lại.");
-    navigate("/login");
-    return;
-  }
-
-  try {
-    const response = await fetch("https://localhost:7165/api/Momo/confirm-frontend", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({ orderId, resultCode, userId: user.id }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.message || "Lỗi khi xác nhận thanh toán.");
+    if (!user || !user.id || user.id === EMPTY_GUID) {
+      alert("User information error. Please login again.");
+      navigate("/login");
+      return;
     }
 
-    // ✅ Xóa giỏ hàng ngay khi backend xác nhận thanh toán thành công
-    clearCart();
-    setCart([]);
+    if (!token) {
+      alert("Authentication error. Please login again.");
+      navigate("/login");
+      return;
+    }
 
-    alert("✅ Thanh toán MoMo thành công!");
-    navigate(`/order-success/${orderId}`, { replace: true });
+    try {
+      const response = await fetch("https://localhost:7165/api/Momo/confirm-frontend", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ orderId, resultCode, userId: user.id }),
+      });
 
-  } catch (error) {
-    console.error("Lỗi xác nhận MoMo:", error);
-    alert(`❌ Có lỗi xảy ra: ${error.message}`);
-    navigate("/cart", { replace: true });
-  }
-}, [navigate, user]);
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.message || "Payment confirmation error.");
+      }
 
+      // ✅ Clear cart after successful payment
+      clearCart();
+      setCart([]);
 
-  // --- useEffect: callback MoMo ---
+      alert("🎄 MoMo payment successful!");
+      navigate(`/order-success/${orderId}`, { replace: true });
+
+    } catch (error) {
+      console.error("MoMo confirmation error:", error);
+      alert(`❌ An error occurred: ${error.message}`);
+      navigate("/cart", { replace: true });
+    }
+  }, [navigate, user]);
+
+  // --- useEffect: MoMo callback ---
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const resultCode = parseInt(params.get("resultCode"), 10);
@@ -80,13 +81,13 @@ const handleMomoSuccessConfirmation = useCallback(async (orderId, resultCode) =>
     if (orderId && !isNaN(resultCode)) {
       if (resultCode === 0) handleMomoSuccessConfirmation(orderId, resultCode);
       else {
-        alert(`❌ Thanh toán MoMo thất bại (${resultCode}).`);
+        alert(`❌ MoMo payment failed (${resultCode}).`);
         navigate("/cart", { replace: true });
       }
     }
   }, [navigate, handleMomoSuccessConfirmation]);
 
-  // --- Load giỏ hàng ---
+  // --- Load cart ---
   useEffect(() => {
     setCart(getCart());
     if (isAuthenticated && user) {
@@ -99,23 +100,24 @@ const handleMomoSuccessConfirmation = useCallback(async (orderId, resultCode) =>
     }
   }, [isAuthenticated, user]);
 
-  // --- Thay đổi input ---
+  // --- Input change ---
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setBillInfo((prev) => ({ ...prev, [name]: value }));
   };
 
-  // --- Cập nhật giỏ hàng ---
+  // --- Update cart ---
   const handleQuantityChange = (id, change) => {
     updateQuantity(id, change);
     setCart(getCart());
   };
+  
   const handleRemove = (id) => {
     removeFromCart(id);
     setCart(getCart());
   };
 
-  // --- Thanh toán ---
+  // --- Checkout ---
   const handleCheckout = async (e) => {
     e.preventDefault();
 
@@ -123,14 +125,14 @@ const handleMomoSuccessConfirmation = useCallback(async (orderId, resultCode) =>
     const EMPTY_GUID = "00000000-0000-0000-0000-000000000000";
 
     if (!isAuthenticated || !user || !user.id || user.id === EMPTY_GUID || !token) {
-      alert("⚠️ Phiên đăng nhập không hợp lệ. Vui lòng đăng nhập lại!");
+      alert("⚠️ Invalid session. Please login again!");
       navigate("/login");
       return;
     }
 
-    if (cart.length === 0) return alert("🛒 Giỏ hàng trống!");
+    if (cart.length === 0) return alert("🎄 Your cart is empty!");
     if (!billInfo.name || !billInfo.address || !billInfo.phoneNumber)
-      return alert("⚠️ Vui lòng điền đủ thông tin!");
+      return alert("⚠️ Please fill in all required information!");
 
     setLoading(true);
     try {
@@ -152,7 +154,7 @@ const handleMomoSuccessConfirmation = useCallback(async (orderId, resultCode) =>
       });
 
       if (!orderResponse.ok)
-        throw new Error("Không thể tạo đơn hàng!");
+        throw new Error("Cannot create order!");
       const orderResult = await orderResponse.json();
       const orderId = orderResult.orderId;
 
@@ -169,58 +171,53 @@ const handleMomoSuccessConfirmation = useCallback(async (orderId, resultCode) =>
           body: JSON.stringify({
             orderId,
             amount: total.toString(),
-            orderInfo: `Thanh toán đơn hàng ${orderId}`,
+            orderInfo: `Payment for order ${orderId}`,
           }),
         });
         const momoData = await momoRes.json();
         if (!momoRes.ok || !momoData.payUrl)
-          throw new Error("Không thể khởi tạo thanh toán MoMo!");
+          throw new Error("Cannot initialize MoMo payment!");
         window.location.href = momoData.payUrl;
         return;
       }
 
       // --- Stripe ---
       if (billInfo.paymentMethod === "STRIPE") {
-  const payload = {
-  orderId,
-  amount: Math.round(total), // ⚠️ Cent nếu USD
-  currency: "usd",
-successUrl: "http://localhost:5173/payment-success",
-  cancelUrl: "http://localhost:5173/payment-cancel",
+        const payload = {
+          orderId,
+          amount: Math.round(total),
+          currency: "usd",
+          successUrl: "http://localhost:5173/payment-success",
+          cancelUrl: "http://localhost:5173/payment-cancel",
+        };
 
+        console.log("👉 Stripe payload:", payload);
 
+        const stripeRes = await fetch("https://postal-uninternational-debra.ngrok-free.dev/api/Stripe/create-session", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify(payload),
+        });
 
-};
+        const stripeData = await stripeRes.json();
+        console.log("👉 Stripe response:", stripeData);
 
-console.log("👉 Stripe payload gửi lên:", payload);
-
-const stripeRes = await fetch("https://postal-uninternational-debra.ngrok-free.dev/api/Stripe/create-session", {
-  method: "POST",
-  headers: {
-    "Content-Type": "application/json",
-    Authorization: `Bearer ${token}`,
-  },
-  body: JSON.stringify(payload),
-});
-
-const stripeData = await stripeRes.json();
-console.log("👉 Stripe response:", stripeData);
-
-if (stripeData?.checkoutUrl)
-  window.location.href = stripeData.checkoutUrl;
-else
-  throw new Error("Không nhận được URL Stripe!");
-
-}
-
+        if (stripeData?.checkoutUrl)
+          window.location.href = stripeData.checkoutUrl;
+        else
+          throw new Error("Cannot get Stripe URL!");
+      }
 
       // --- COD ---
-      alert(`✅ Đặt hàng thành công!\nMã đơn: ${orderId}`);
+      alert(`🎄 Order placed successfully!\nOrder ID: ${orderId}`);
       clearCart();
       setCart(getCart());
-      navigate(`/order-success/${orderId}`);
+      navigate("/cart");
     } catch (err) {
-      alert(`❌ Lỗi: ${err.message}`);
+      alert(`❌ Error: ${err.message}`);
       console.error(err);
     } finally {
       setLoading(false);
@@ -229,117 +226,241 @@ else
 
   const total = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // --- Hiển thị ---
-  if (authLoading) return <div className="text-center mt-10">Đang tải...</div>;
+  // --- Display ---
+  if (authLoading) return <div className="text-center mt-10 text-red-600">Loading...</div>;
+  
   if (!isAuthenticated)
     return (
-      <div className="text-center mt-10">
-        <p>Bạn cần đăng nhập để xem giỏ hàng.</p>
-        <button onClick={() => navigate("/login")} className="bg-blue-500 text-white px-4 py-2 rounded mt-3">
-          Đăng nhập
-        </button>
+      <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-green-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-10 border-4 border-red-200 text-center max-w-md">
+          <div className="text-6xl mb-4">🎅</div>
+          <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent">
+            Login Required
+          </h2>
+          <p className="text-gray-600 mb-6">You need to login to view your cart.</p>
+          <button 
+            onClick={() => navigate("/login")} 
+            className="bg-gradient-to-r from-red-600 to-green-600 text-white px-8 py-3 rounded-full font-bold hover:from-red-700 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg"
+          >
+            Login Now
+          </button>
+        </div>
       </div>
     );
 
   if (cart.length === 0)
     return (
-      <div className="text-center mt-10">
-        <p>🛒 Giỏ hàng trống</p>
-        <button onClick={() => navigate("/")} className="text-blue-600 hover:underline mt-3">
-          ← Tiếp tục mua sắm
-        </button>
+      <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-green-50 flex items-center justify-center">
+        <div className="bg-white rounded-2xl shadow-2xl p-10 border-4 border-green-200 text-center max-w-md">
+          <div className="text-6xl mb-4">🎁</div>
+          <h2 className="text-2xl font-bold mb-4 bg-gradient-to-r from-green-600 to-red-600 bg-clip-text text-transparent">
+            Your Cart is Empty
+          </h2>
+          <p className="text-gray-600 mb-6">Start shopping and add some festive items!</p>
+          <button 
+            onClick={() => navigate("/")} 
+            className="bg-gradient-to-r from-green-600 to-red-600 text-white px-8 py-3 rounded-full font-bold hover:from-green-700 hover:to-red-700 transition-all transform hover:scale-105 shadow-lg"
+          >
+            ← Continue Shopping
+          </button>
+        </div>
       </div>
     );
 
   return (
-    <div className="max-w-6xl mx-auto p-6">
-      <h1 className="text-3xl font-bold mb-6">🛍️ Giỏ hàng của bạn</h1>
-
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* --- Danh sách sản phẩm --- */}
-        <div className="lg:col-span-2 bg-white rounded-lg shadow p-6">
-          {cart.map((item) => (
-            <div key={item.id} className="flex items-center gap-4 border-b pb-4 last:border-b-0">
-              <img
-                src={item.imageUrl || "https://via.placeholder.com/80"}
-                alt={item.name}
-                className="w-20 h-20 object-cover rounded"
-              />
-              <div className="flex-1">
-                <h2 className="font-semibold text-lg">{item.name}</h2>
-                <p className="text-green-600 font-medium text-lg">{item.price.toLocaleString()} đ</p>
-              </div>
-              <div className="flex items-center gap-2">
-                <button onClick={() => handleQuantityChange(item.id, -1)} className="w-8 h-8 bg-gray-200 rounded">-</button>
-                <span>{item.quantity}</span>
-                <button onClick={() => handleQuantityChange(item.id, 1)} className="w-8 h-8 bg-gray-200 rounded">+</button>
-              </div>
-              <button onClick={() => handleRemove(item.id)} className="text-red-600 hover:text-red-700">Xóa</button>
-            </div>
-          ))}
+    <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-green-50">
+      {/* Christmas Header */}
+      <div className="bg-gradient-to-r from-red-600 via-green-600 to-red-600 h-2"></div>
+      
+      <div className="max-w-7xl mx-auto p-6">
+        {/* Header */}
+        <div className="flex items-center gap-3 mb-8">
+          <ShoppingBag className="text-red-600" size={36} />
+          <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent">
+            Your Shopping Cart
+          </h1>
+          <span className="text-3xl">🎄</span>
         </div>
 
-        {/* --- Thanh toán --- */}
-        <div className="bg-white rounded-lg shadow p-6 sticky top-6">
-          <h2 className="text-xl font-bold mb-4">Thông tin đơn hàng</h2>
-          <div className="flex justify-between mb-4">
-            <span>Tổng cộng:</span>
-            <span className="font-bold text-green-600">{total.toLocaleString()} đ</span>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* --- Product List --- */}
+          <div className="lg:col-span-2 space-y-4">
+            {cart.map((item) => (
+              <div 
+                key={item.id} 
+                className="bg-white rounded-xl shadow-lg p-6 border-2 border-green-200 hover:shadow-2xl transition-shadow"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="relative">
+                    <img
+                      src={item.imageUrl || "https://via.placeholder.com/80"}
+                      alt={item.name}
+                      className="w-24 h-24 object-cover rounded-lg border-2 border-red-200"
+                    />
+                    <span className="absolute -top-2 -right-2 text-2xl">🎁</span>
+                  </div>
+                  
+                  <div className="flex-1">
+                    <h2 className="font-bold text-lg text-gray-800">{item.name}</h2>
+                    <p className="text-green-600 font-bold text-xl mt-1">
+                      ${item.price.toLocaleString()}
+                    </p>
+                  </div>
+                  
+                  {/* Quantity Controls */}
+                  <div className="flex items-center gap-3 bg-gradient-to-r from-red-50 to-green-50 px-4 py-2 rounded-full border-2 border-green-200">
+                    <button 
+                      onClick={() => handleQuantityChange(item.id, -1)} 
+                      className="w-8 h-8 bg-white border-2 border-red-400 text-red-600 rounded-full hover:bg-red-50 transition-all flex items-center justify-center font-bold"
+                    >
+                      <Minus size={16} />
+                    </button>
+                    <span className="font-bold text-lg min-w-[30px] text-center">{item.quantity}</span>
+                    <button 
+                      onClick={() => handleQuantityChange(item.id, 1)} 
+                      className="w-8 h-8 bg-white border-2 border-green-400 text-green-600 rounded-full hover:bg-green-50 transition-all flex items-center justify-center font-bold"
+                    >
+                      <Plus size={16} />
+                    </button>
+                  </div>
+                  
+                  {/* Remove Button */}
+                  <button 
+                    onClick={() => handleRemove(item.id)} 
+                    className="text-red-600 hover:text-red-700 transition-colors p-2 hover:bg-red-50 rounded-full"
+                    title="Remove item"
+                  >
+                    <Trash2 size={20} />
+                  </button>
+                </div>
+              </div>
+            ))}
           </div>
 
-          {!showCheckoutForm ? (
-            <button
-              onClick={() => setShowCheckoutForm(true)}
-              className="w-full bg-blue-600 text-white py-3 rounded-lg hover:bg-blue-700 font-semibold"
-            >
-              Tiến hành thanh toán
-            </button>
-          ) : (
-            <form onSubmit={handleCheckout} className="space-y-4">
-              <div>
-                <label>Họ và tên *</label>
-                <input name="name" value={billInfo.name} onChange={handleInputChange} required className="w-full border px-3 py-2 rounded" />
+          {/* --- Checkout Panel --- */}
+          <div className="lg:col-span-1">
+            <div className="bg-white rounded-2xl shadow-2xl p-6 border-4 border-red-200 sticky top-6">
+              <div className="flex items-center gap-2 mb-6">
+                <Package className="text-green-600" size={24} />
+                <h2 className="text-2xl font-bold bg-gradient-to-r from-green-600 to-red-600 bg-clip-text text-transparent">
+                  Order Summary
+                </h2>
               </div>
-              <div>
-                <label>Địa chỉ *</label>
-                <textarea name="address" value={billInfo.address} onChange={handleInputChange} rows="2" required className="w-full border px-3 py-2 rounded" />
+              
+              <div className="bg-gradient-to-br from-green-50 to-red-50 rounded-xl p-4 mb-6 border-2 border-green-200">
+                <div className="flex justify-between items-center">
+                  <span className="text-gray-700 font-semibold">Total Amount:</span>
+                  <span className="font-bold text-2xl text-green-600">${total.toLocaleString()}</span>
+                </div>
               </div>
-              <div>
-                <label>Số điện thoại *</label>
-                <input name="phoneNumber" value={billInfo.phoneNumber} onChange={handleInputChange} required className="w-full border px-3 py-2 rounded" />
-              </div>
-              <div>
-                <label>Phương thức thanh toán *</label>
-                <select
-                  name="paymentMethod"
-                  value={billInfo.paymentMethod}
-                  onChange={handleInputChange}
-                  className="w-full border px-3 py-2 rounded"
+
+              {!showCheckoutForm ? (
+                <button
+                  onClick={() => setShowCheckoutForm(true)}
+                  className="w-full bg-gradient-to-r from-red-600 to-green-600 text-white py-4 rounded-full hover:from-red-700 hover:to-green-700 font-bold text-lg transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
                 >
-                  <option value="COD">Thanh toán khi nhận hàng (COD)</option>
-                  <option value="MOMO">Thanh toán bằng MoMo</option>
-                  <option value="STRIPE">Thanh toán bằng thẻ (Stripe)</option>
-                </select>
-              </div>
-              <div>
-                <label>Ghi chú</label>
-                <textarea name="note" value={billInfo.note} onChange={handleInputChange} rows="2" className="w-full border px-3 py-2 rounded" />
-              </div>
-              <div className="flex gap-2">
-                <button type="button" onClick={() => setShowCheckoutForm(false)} className="flex-1 bg-gray-200 py-3 rounded">
-                  Hủy
+                  <CreditCard size={20} />
+                  Proceed to Checkout
                 </button>
-                <button type="submit" disabled={loading} className="flex-1 bg-blue-600 text-white py-3 rounded hover:bg-blue-700">
-                  {loading ? "Đang xử lý..." :
-                    billInfo.paymentMethod === "MOMO" ? "Thanh toán MoMo" :
-                    billInfo.paymentMethod === "STRIPE" ? "Thanh toán thẻ" :
-                    "Đặt hàng"}
-                </button>
-              </div>
-            </form>
-          )}
+              ) : (
+                <form onSubmit={handleCheckout} className="space-y-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Full Name *</label>
+                    <input 
+                      name="name" 
+                      value={billInfo.name} 
+                      onChange={handleInputChange} 
+                      required 
+                      className="w-full border-2 border-green-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition-all" 
+                      placeholder="Santa Claus"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Address *</label>
+                    <textarea 
+                      name="address" 
+                      value={billInfo.address} 
+                      onChange={handleInputChange} 
+                      rows="2" 
+                      required 
+                      className="w-full border-2 border-green-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition-all" 
+                      placeholder="North Pole, Arctic"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Phone Number *</label>
+                    <input 
+                      name="phoneNumber" 
+                      value={billInfo.phoneNumber} 
+                      onChange={handleInputChange} 
+                      required 
+                      className="w-full border-2 border-green-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition-all" 
+                      placeholder="+1 234 567 8900"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Payment Method *</label>
+                    <select
+                      name="paymentMethod"
+                      value={billInfo.paymentMethod}
+                      onChange={handleInputChange}
+                      className="w-full border-2 border-green-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition-all"
+                    >
+                      <option value="COD">💵 Cash on Delivery (COD)</option>
+                      <option value="MOMO">📱 MoMo Payment</option>
+                      <option value="STRIPE">💳 Card Payment (Stripe)</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-semibold text-gray-700 mb-2">Notes (Optional)</label>
+                    <textarea 
+                      name="note" 
+                      value={billInfo.note} 
+                      onChange={handleInputChange} 
+                      rows="2" 
+                      className="w-full border-2 border-green-300 px-4 py-2 rounded-lg focus:outline-none focus:ring-4 focus:ring-red-300 transition-all" 
+                      placeholder="Special delivery instructions..."
+                    />
+                  </div>
+                  
+                  <div className="flex gap-3 pt-2">
+                    <button 
+                      type="button" 
+                      onClick={() => setShowCheckoutForm(false)} 
+                      className="flex-1 bg-gray-200 text-gray-700 py-3 rounded-full font-semibold hover:bg-gray-300 transition-all"
+                    >
+                      Cancel
+                    </button>
+                    <button 
+                      type="submit" 
+                      disabled={loading} 
+                      className="flex-1 bg-gradient-to-r from-green-600 to-red-600 text-white py-3 rounded-full font-bold hover:from-green-700 hover:to-red-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2 disabled:opacity-50"
+                    >
+                      {loading ? (
+                        <>Processing...</>
+                      ) : (
+                        <>
+                          <Gift size={18} />
+                          {billInfo.paymentMethod === "MOMO" ? "Pay with MoMo" :
+                           billInfo.paymentMethod === "STRIPE" ? "Pay with Card" :
+                           "Place Order"}
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
         </div>
       </div>
+
+      {/* Footer decoration */}
+      <div className="bg-gradient-to-r from-red-600 via-green-600 to-red-600 h-2 mt-10"></div>
     </div>
   );
 }

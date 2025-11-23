@@ -23,11 +23,11 @@ export default function AdminLayout() {
 
   return (
     <div className="flex h-screen bg-gray-100">
-      {/* Sidebar */}
+      {/* Sidebar for medium and large screens */}
       <aside
         className={`${
           sidebarOpen ? "w-64" : "w-16"
-        } bg-white shadow-lg transition-all duration-300`}
+        } bg-white shadow-lg transition-all duration-300 hidden md:block`}
       >
         <div className="flex items-center justify-between p-4 border-b">
           <h1 className={`${sidebarOpen ? "block" : "hidden"} font-bold text-blue-600`}>
@@ -61,9 +61,60 @@ export default function AdminLayout() {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-auto p-6">
-        <Outlet />
-      </main>
+      <div className="flex-1 flex flex-col overflow-hidden">
+        <header className="bg-white shadow-sm md:hidden">
+          <div className="flex items-center justify-between p-4">
+            <h1 className="font-bold text-blue-600">Admin</h1>
+            <button onClick={() => setSidebarOpen(!sidebarOpen)}>
+              <Menu className="w-6 h-6 text-gray-500" />
+            </button>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-auto p-4 md:p-6">
+          <Outlet />
+        </main>
+      </div>
+
+      {/* Sidebar for small screens (overlay) */}
+      {sidebarOpen && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-50 z-20 md:hidden"
+          onClick={() => setSidebarOpen(false)}
+        >
+          <aside
+            className="w-64 bg-white h-full shadow-lg transition-all duration-300"
+          >
+            <div className="flex items-center justify-between p-4 border-b">
+              <h1 className="font-bold text-blue-600">Admin</h1>
+              <button onClick={() => setSidebarOpen(false)}>
+                <Menu className="w-6 h-6 text-gray-500" />
+              </button>
+            </div>
+
+            <nav className="mt-4 space-y-2">
+              {menuItems.map((item) => {
+                const Icon = item.icon;
+                const active = isActiveRoute(item.path);
+                return (
+                  <Link
+                    key={item.id}
+                    to={item.path}
+                    className={`flex items-center gap-3 px-4 py-2 rounded-md ${
+                      active
+                        ? "bg-blue-100 text-blue-700 font-medium"
+                        : "text-gray-600 hover:bg-gray-50 hover:text-gray-900"
+                    }`}
+                  >
+                    <Icon className="w-5 h-5" />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+          </aside>
+        </div>
+      )}
     </div>
   );
 }

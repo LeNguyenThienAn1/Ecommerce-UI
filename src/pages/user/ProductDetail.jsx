@@ -1,16 +1,40 @@
+// ProductDetail.jsx - Tối ưu hóa sau khi sửa BE
 import React, { useEffect, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { addToCart } from "../../utils/cartService";
+import { Gift, ShoppingCart, Sparkles, MessageCircle, Send, Edit2, Trash2, Check, X, Ruler, Palette, HardDrive, BatteryCharging } from "lucide-react";
+
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const d = new Date(dateString);
+  return d.toLocaleString("en-US", { day: "2-digit", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" });
+}
 
 export default function ProductDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
+
   const [product, setProduct] = useState(null);
-  const [category, setCategory] = useState(null);
-  const [brand, setBrand] = useState(null);
+  // Không cần state phức tạp, sẽ lấy tên trực tiếp từ data
+  const [categoryName, setCategoryName] = useState("N/A"); 
+  const [brandName, setBrandName] = useState("N/A");
   const [loading, setLoading] = useState(true);
 
-  // State cho detail option user chọn
+  // --- COMMENT STATE ---
+  const [comments, setComments] = useState([]);
+  const [newComment, setNewComment] = useState("");
+  const [commentLoading, setCommentLoading] = useState(false);
+  const [editingId, setEditingId] = useState(null);
+  const [editingContent, setEditingContent] = useState("");
+  const [commentError, setCommentError] = useState(null);
+
+  const [productDetails, setProductDetails] = useState({
+    size: null,
+    color: null,
+    capacity: null,
+    batteryCapacity: null,
+  });
+  
   const [selectedDetail, setSelectedDetail] = useState({
     size: "",
     color: "",
@@ -18,258 +42,464 @@ export default function ProductDetail() {
     batteryCapacity: "",
   });
 
+  // ================= FETCH LOGIC =================
+
   useEffect(() => {
-    // Fetch product theo id
-    fetch(`https://localhost:7165/api/products/${id}`)
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to fetch product");
-        return res.json();
-      })
-      .then((data) => {
-        setProduct(data);
-
-        // Nếu có detail thì gán giá trị mặc định
-        if (data.detail) {
-          setSelectedDetail({
-            size: data.detail.size || "",
-            color: data.detail.color || "",
-            capacity: data.detail.capacity || "",
-            batteryCapacity: data.detail.batteryCapacity || "",
-          });
-        }
-
-        // Lấy category
-        if (data.category) {
-          setCategory(data.category);
-        } else if (data.categoryId) {
-          fetch(`https://localhost:7165/api/categories`)
-            .then((res) => {
-              if (!res.ok) throw new Error("Failed to fetch categories");
-              return res.json();
-            })
-            .then((categories) => {
-              const cat = categories.find(c => c.categoryId === data.categoryId);
-              setCategory(cat);
-            })
-            .catch((err) => console.error("Error fetching category:", err));
-        }
-
-        // Lấy brand
-        if (data.brand) {
-          setBrand(data.brand);
-        } else if (data.brandId) {
-          fetch(`https://localhost:7165/api/brands`)
-            .then((res) => {
-              if (!res.ok) throw new Error("Failed to fetch brands");
-              return res.json();
-            })
-            .then((brands) => {
-              const br = brands.find(b => b.brandId === data.brandId);
-              setBrand(br);
-            })
-            .catch((err) => console.error("Error fetching brand:", err));
-        }
-
-        setLoading(false);
-      })
-      .catch((err) => {
-        console.error(err);
-        setLoading(false);
-      });
+    fetchProduct();
+    fetchComments();
   }, [id]);
 
-  if (loading) {
-    return (
-      <div className="flex justify-center items-center min-h-screen">
-        <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
-        <p className="ml-4 text-gray-500">Loading...</p>
-      </div>
-    );
-  }
+  // Loại bỏ hàm fetchCategoryAndBrand không cần thiết nữa
 
-  if (!product) {
-    return <p className="text-center text-red-500 mt-10">Product not found</p>;
-  }
+  const fetchProduct = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch(`https://localhost:7165/api/products/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch product");
+      const data = await res.json();
+      setProduct(data);
 
-  // Handler khi chọn option
+      if (data.detail) {
+        setProductDetails({
+            size: data.detail.size || null,
+            color: data.detail.color || null,
+            capacity: data.detail.capacity || null,
+            batteryCapacity: data.detail.batteryCapacity || null,
+        });
+
+        setSelectedDetail({
+          size: data.detail.size || "",
+          color: data.detail.color || "",
+          capacity: data.detail.capacity || "",
+          batteryCapacity: data.detail.batteryCapacity || "",
+        });
+      } else {
+        setProductDetails({});
+      }
+
+      // 🛑 LOGIC MỚI: Chỉ cần đọc trực tiếp (An toàn hơn)
+      // data.category và data.brand đã là đối tượng nhờ sửa BE
+      const catName = data.category?.name || "N/A";
+      setCategoryName(catName);
+
+      const bName = data.brand?.name || "N/A";
+      setBrandName(bName);
+      
+    } catch (error) {
+      console.error("Lỗi khi tải sản phẩm:", error);
+      setCategoryName("N/A (Lỗi tải)");
+      setBrandName("N/A (Lỗi tải)");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const fetchComments = async () => {
+    try {
+      const res = await fetch(`https://localhost:7165/api/ProductComment/${id}`);
+      if (!res.ok) throw new Error("Failed to fetch comments");
+      const data = await res.json();
+      setComments(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  // ================= COMMENT & CART ACTIONS (Giữ nguyên) =================
+  const handleDeleteComment = async (commentId) => {
+    if (!window.confirm("Are you sure you want to delete this comment? 🎄")) return;
+    try {
+      const token = localStorage.getItem("accessToken"); 
+      const res = await fetch(`https://localhost:7165/api/ProductComment/${commentId}`, {
+        method: "DELETE",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("Failed to delete comment");
+      await fetchComments();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleEditComment = (comment) => {
+    setEditingId(comment.id);
+    setEditingContent(comment.content);
+  };
+
+  const handleUpdateComment = async () => {
+    if (!editingContent.trim()) {
+      alert("Comment content cannot be empty");
+      return;
+    }
+    try {
+      const token = localStorage.getItem("accessToken");
+      const res = await fetch(`https://localhost:7165/api/ProductComment/${editingId}`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ content: editingContent }),
+      });
+      if (!res.ok) throw new Error("Failed to update comment");
+      setEditingId(null);
+      setEditingContent("");
+      await fetchComments();
+    } catch (err) {
+      alert(err.message);
+    }
+  };
+
+  const handleSubmitComment = async () => {
+    if (!newComment.trim()) {
+      setCommentError("Please enter your comment!");
+      return;
+    }
+
+    try {
+      setCommentLoading(true);
+      setCommentError(null);
+
+      const token = localStorage.getItem("accessToken");
+
+      const res = await fetch("https://localhost:7165/api/ProductComment", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          productId: id,
+          content: newComment,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Failed to submit comment!");
+
+      setNewComment("");
+      await fetchComments();
+    } catch (error) {
+      setCommentError(error.message);
+    } finally {
+      setCommentLoading(false);
+    }
+  };
+
   const handleDetailChange = (field, value) => {
     setSelectedDetail((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Handler Add to Cart với 2 option
   const handleAddToCart = (goToCart = false) => {
+    const finalPrice =
+        product.salePercent && product.salePercent > 0
+        ? product.price * (1 - product.salePercent / 100)
+        : product.price;
+
     const productToAdd = {
       id: product.id,
       name: product.name,
-      price: product.price,
+      price: finalPrice, 
       image: product.imageUrl,
       ...selectedDetail,
     };
 
     addToCart(productToAdd, 1);
 
-    if (goToCart) {
-      // Chuyển ngay sang trang giỏ hàng
-      navigate("/cart");
-    } else {
-      // Chỉ hiển thị thông báo
-      alert("✅ Sản phẩm đã được thêm vào giỏ hàng!");
-    }
+    if (goToCart) navigate("/cart");
+    else alert("🎄 Product added to cart!");
   };
 
-  return (
-    <div className="max-w-5xl mx-auto bg-white p-6 rounded-lg shadow mt-6">
-      <Link to="/" className="text-blue-600 hover:underline mb-4 inline-block">
-        ← Quay lại trang chủ
-      </Link>
+  if (loading) return <p className="text-center mt-10 text-red-600">Loading...</p>;
+  if (!product) return <p className="text-center text-red-500 mt-10">Product not found</p>;
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Image */}
-        <div>
-          {product.imageUrl ? (
-            <img
-              src={product.imageUrl}
-              alt={product.name}
-              className="w-full h-auto rounded-lg shadow"
+  const finalPrice =
+    product.salePercent && product.salePercent > 0
+      ? product.price * (1 - product.salePercent / 100)
+      : product.price;
+
+
+  return (
+    <div className="min-h-screen bg-gradient-to-b from-red-50 via-white to-green-50">
+      <div className="bg-gradient-to-r from-red-600 via-green-600 to-red-600 h-2"></div>
+      
+      <div className="max-w-6xl mx-auto p-6">
+        <Link to="/" className="inline-flex items-center gap-2 text-red-600 hover:text-green-600 mb-6 font-semibold transition-colors">
+          <span>←</span> Back to Home
+        </Link>
+
+        {/* Main Product Card */}
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden border-4 border-red-200">
+          <div className="bg-gradient-to-r from-red-600 to-green-600 h-1"></div>
+          
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 p-8">
+            {/* Product Image */}
+            <div className="relative group">
+              <div className="absolute -top-4 -right-4 bg-red-600 text-white px-4 py-2 rounded-full font-bold text-sm shadow-lg z-10 rotate-12">
+                🎅 Special Offer
+              </div>
+              <div className="relative overflow-hidden rounded-xl shadow-xl border-4 border-green-200">
+                <img
+                  src={product.imageUrl || ""}
+                  alt={product.name}
+                  className="w-full h-auto transition-transform duration-300 group-hover:scale-105"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-red-900/20 to-transparent pointer-events-none"></div>
+              </div>
+            </div>
+
+            {/* Product Info */}
+            <div className="flex flex-col">
+              <div className="flex items-center gap-2 mb-3">
+                <Sparkles className="text-yellow-500" size={24} />
+                <h1 className="text-4xl font-bold bg-gradient-to-r from-red-600 to-green-600 bg-clip-text text-transparent">
+                  {product.name}
+                </h1>
+              </div>
+
+              {/* Price Display */}
+              <div className="text-4xl font-extrabold mb-4">
+                {product.salePercent > 0 ? (
+                  <div className="flex items-baseline gap-3">
+                    <span className="text-red-600">
+                      {finalPrice.toLocaleString()} đ
+                    </span>
+                    <span className="line-through text-gray-400 text-xl font-normal">
+                      {product.price.toLocaleString()} đ
+                    </span>
+                    <span className="bg-red-500 text-white text-sm px-3 py-1 rounded-full font-semibold shadow-md">
+                      -{product.salePercent}%
+                    </span>
+                  </div>
+                ) : (
+                  <span className="text-red-600">
+                    {product.price.toLocaleString()} đ
+                  </span>
+                )}
+              </div>
+
+              <p className="text-gray-700 mb-6 leading-relaxed">{product.description}</p>
+
+              {/* Product Details (Category, Brand, Stock + New Details) */}
+              <div className="bg-gradient-to-br from-red-50 to-green-50 rounded-xl p-6 mb-6 border-2 border-red-200">
+                <div className="grid grid-cols-2 gap-4">
+                  
+                  {/* Category */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">🏷️</span>
+                    <div>
+                      <p className="text-xs text-gray-500">Category</p>
+                      <p className="font-semibold text-gray-800">{categoryName}</p> 
+                    </div>
+                  </div>
+                  
+                  {/* Brand */}
+                  <div className="flex items-center gap-2">
+                    <span className="text-2xl">⭐</span>
+                    <div>
+                      <p className="text-xs text-gray-500">Brand</p>
+                      <p className="font-semibold text-gray-800">{brandName}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Stock */}
+                  <div className="flex items-center gap-2 col-span-2">
+                    <span className="text-2xl">📦</span>
+                    <div>
+                      <p className="text-xs text-gray-500">Stock</p>
+                      <p className="font-semibold text-gray-800">{product.stock}</p>
+                    </div>
+                  </div>
+                  
+                  {/* === DEVICE DETAILS SECTION === */}
+                  
+                  {productDetails.size && (
+                      <div className="flex items-center gap-2">
+                        <Ruler className="text-red-500" size={24} />
+                        <div>
+                          <p className="text-xs text-gray-500">Size</p>
+                          <p className="font-semibold text-gray-800">{productDetails.size}</p>
+                        </div>
+                      </div>
+                  )}
+
+                  {productDetails.color && (
+                      <div className="flex items-center gap-2">
+                        <Palette className="text-green-500" size={24} />
+                        <div>
+                          <p className="text-xs text-gray-500">Color</p>
+                          <p className="font-semibold text-gray-800">{productDetails.color}</p>
+                        </div>
+                      </div>
+                  )}
+
+                  {(productDetails.capacity > 0 || productDetails.capacity === 'string') && (
+                      <div className="flex items-center gap-2">
+                        <HardDrive className="text-blue-500" size={24} />
+                        <div>
+                          <p className="text-xs text-gray-500">Capacity</p>
+                          <p className="font-semibold text-gray-800">{productDetails.capacity}</p>
+                        </div>
+                      </div>
+                  )}
+
+                  {(productDetails.batteryCapacity > 0 || productDetails.batteryCapacity === 'string') && (
+                      <div className="flex items-center gap-2">
+                        <BatteryCharging className="text-yellow-500" size={24} />
+                        <div>
+                          <p className="text-xs text-gray-500">Battery Capacity</p>
+                          <p className="font-semibold text-gray-800">{productDetails.batteryCapacity}</p>
+                        </div>
+                      </div>
+                  )}
+                  {/* === END DEVICE DETAILS SECTION === */}
+
+                </div>
+              </div>
+
+              {/* Action Buttons */}
+              <div className="mt-auto flex gap-4">
+                <button
+                  className="flex-1 bg-white border-3 border-red-600 text-red-600 px-8 py-4 rounded-full font-bold hover:bg-red-50 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                  onClick={() => handleAddToCart(false)}
+                >
+                  <ShoppingCart size={20} />
+                  Add To Cart
+                </button>
+
+                <button
+                  onClick={() => handleAddToCart(true)}
+                  className="flex-1 bg-gradient-to-r from-red-600 to-green-600 text-white px-8 py-4 rounded-full font-bold hover:from-red-700 hover:to-green-700 transition-all transform hover:scale-105 shadow-lg flex items-center justify-center gap-2"
+                >
+                  <Gift size={20} />
+                  Buy Now
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Comments Section */}
+        <div className="mt-10 bg-white rounded-2xl shadow-2xl p-8 border-4 border-green-200">
+          <div className="flex items-center gap-3 mb-6">
+            <MessageCircle className="text-green-600" size={28} />
+            <h2 className="text-3xl font-bold bg-gradient-to-r from-green-600 to-red-600 bg-clip-text text-transparent">
+              Customer Reviews
+            </h2>
+            <span className="text-2xl">🎄</span>
+          </div>
+
+          {/* Comment Form */}
+          <div className="mb-8 bg-gradient-to-br from-green-50 to-red-50 rounded-xl p-6 border-2 border-green-200">
+            <textarea
+              rows="4"
+              value={newComment}
+              onChange={(e) => setNewComment(e.target.value)}
+              placeholder="Share your thoughts about this product... 🎅"
+              className="w-full border-2 border-green-300 p-4 rounded-xl focus:outline-none focus:ring-4 focus:ring-red-300 focus:border-red-400 transition-all"
             />
+
+            {commentError && (
+              <p className="text-red-600 mt-3 flex items-center gap-2">
+                <span>⚠️</span> {commentError}
+              </p>
+            )}
+
+            <button
+              onClick={handleSubmitComment}
+              disabled={commentLoading}
+              className="mt-4 bg-gradient-to-r from-green-600 to-red-600 text-white px-8 py-3 rounded-full font-bold hover:from-green-700 hover:to-red-700 transition-all transform hover:scale-105 shadow-lg flex items-center gap-2 disabled:opacity-50"
+            >
+              <Send size={18} />
+              {commentLoading ? "Sending..." : "Post Comment"}
+            </button>
+          </div>
+
+          {/* Comments List */}
+          {comments.length === 0 ? (
+            <div className="text-center py-12">
+              <p className="text-gray-500 text-lg">🎁 No reviews yet. Be the first to share!</p>
+            </div>
           ) : (
-            <div className="w-full h-64 bg-gray-200 flex items-center justify-center rounded-lg">
-              <span className="text-gray-500">No Image</span>
+            <div className="space-y-4">
+              {comments.map((c) => (
+                <div key={c.id} className="bg-gradient-to-r from-red-50 to-green-50 border-2 border-green-200 rounded-xl p-6 hover:shadow-lg transition-shadow">
+                  <div className="flex items-center mb-4">
+                    <div className="relative">
+                      <img
+                        src={c.user?.avatarUrl || "https://via.placeholder.com/40"}
+                        alt={c.user?.name}
+                        className="w-12 h-12 rounded-full border-3 border-red-400 shadow-md"
+                      />
+                      <span className="absolute -top-1 -right-1 text-xl">🎅</span>
+                    </div>
+                    <div className="ml-4 flex-1">
+                      <p className="font-bold text-gray-800">{c.user?.name}</p>
+                      <p className="text-xs text-gray-500 flex items-center gap-1">
+                        <span>🕐</span>
+                        {formatDate(c.createdDate || c.createAt)}
+                      </p>
+                    </div>
+                  </div>
+
+                  {editingId === c.id ? (
+                    <div className="pl-16">
+                      <textarea
+                        className="w-full border-2 border-green-300 rounded-xl p-3 focus:outline-none focus:ring-4 focus:ring-red-300"
+                        rows="3"
+                        value={editingContent}
+                        onChange={(e) => setEditingContent(e.target.value)}
+                      />
+                      <div className="mt-3 flex gap-3">
+                        <button
+                          onClick={handleUpdateComment}
+                          className="px-5 py-2 bg-gradient-to-r from-green-600 to-green-700 text-white rounded-full font-semibold hover:from-green-700 hover:to-green-800 transition-all flex items-center gap-2"
+                        >
+                          <Check size={16} />
+                          Save
+                        </button>
+                        <button
+                          onClick={() => {
+                            setEditingId(null);
+                            setEditingContent("");
+                          }}
+                          className="px-5 py-2 bg-gray-400 text-white rounded-full font-semibold hover:bg-gray-500 transition-all flex items-center gap-2"
+                        >
+                          <X size={16} />
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <p className="text-gray-700 leading-relaxed pl-16 mb-3">{c.content}</p>
+                      
+                      <div className="pl-16 flex gap-4">
+                        <button
+                          onClick={() => handleEditComment(c)}
+                          className="text-green-600 hover:text-green-700 font-semibold flex items-center gap-1 transition-colors"
+                        >
+                          <Edit2 size={14} />
+                          Edit
+                        </button>
+                        <button
+                          onClick={() => handleDeleteComment(c.id)}
+                          className="text-red-600 hover:text-red-700 font-semibold flex items-center gap-1 transition-colors"
+                        >
+                          <Trash2 size={14} />
+                          Delete
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              ))}
             </div>
           )}
         </div>
-
-        {/* Info */}
-        <div>
-          <h1 className="text-3xl font-bold mb-3">{product.name}</h1>
-          <p className="text-gray-700 mb-4">{product.description}</p>
-
-          {/* Price & Sale */}
-          <div className="mb-4">
-            {product.salePercent && product.salePercent > 0 ? (
-              <div>
-                <span className="text-2xl text-red-500 font-bold">
-                  {(
-                    product.price -
-                    (product.price * product.salePercent) / 100
-                  ).toLocaleString()}{" "}
-                  đ
-                </span>
-                <span className="line-through text-gray-400 ml-3 text-lg">
-                  {product.price.toLocaleString()} đ
-                </span>
-                <span className="ml-3 text-green-600 font-semibold">
-                  -{product.salePercent}%
-                </span>
-              </div>
-            ) : (
-              <p className="text-2xl text-green-600 font-semibold">
-                {product.price?.toLocaleString()} đ
-              </p>
-            )}
-          </div>
-
-          <p className="mb-2">
-            <span className="font-semibold">Kho:</span> {product.stock}
-          </p>
-          <p className="mb-2">
-            <span className="font-semibold">Danh mục:</span>{" "}
-            {category?.categoryName || "N/A"}
-          </p>
-          <p className="mb-4">
-            <span className="font-semibold">Thương hiệu:</span>{" "}
-            {brand?.brandName || "N/A"}
-          </p>
-
-          {/* --- Detail Options --- */}
-          <div className="mt-4 space-y-3 border-t pt-4">
-            <h3 className="font-semibold text-lg">Tùy chọn sản phẩm</h3>
-
-            {/* Size */}
-            <div>
-              <label className="block font-medium mb-1">Size:</label>
-              <select
-                className="border rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 outline-none"
-                value={selectedDetail.size}
-                onChange={(e) => handleDetailChange("size", e.target.value)}
-              >
-                <option value="">-- Chọn size --</option>
-                <option value="Small">Small</option>
-                <option value="Medium">Medium</option>
-                <option value="Large">Large</option>
-                <option value="XL">XL</option>
-              </select>
-            </div>
-
-            {/* Color */}
-            <div>
-              <label className="block font-medium mb-1">Màu sắc:</label>
-              <select
-                className="border rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 outline-none"
-                value={selectedDetail.color}
-                onChange={(e) => handleDetailChange("color", e.target.value)}
-              >
-                <option value="">-- Chọn màu --</option>
-                <option value="Blue">Xanh dương</option>
-                <option value="Black">Đen</option>
-                <option value="White">Trắng</option>
-                <option value="Red">Đỏ</option>
-                <option value="Green">Xanh lá</option>
-              </select>
-            </div>
-
-            {/* Capacity */}
-            <div>
-              <label className="block font-medium mb-1">Dung lượng:</label>
-              <select
-                className="border rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 outline-none"
-                value={selectedDetail.capacity}
-                onChange={(e) => handleDetailChange("capacity", e.target.value)}
-              >
-                <option value="">-- Chọn dung lượng --</option>
-                <option value="16">16 GB</option>
-                <option value="32">32 GB</option>
-                <option value="64">64 GB</option>
-                <option value="128">128 GB</option>
-                <option value="256">256 GB</option>
-              </select>
-            </div>
-
-            {/* Battery */}
-            <div>
-              <label className="block font-medium mb-1">Pin (mAh):</label>
-              <input
-                type="number"
-                className="border rounded px-3 py-2 w-full focus:ring-2 focus:ring-blue-500 outline-none"
-                value={selectedDetail.batteryCapacity}
-                onChange={(e) =>
-                  handleDetailChange("batteryCapacity", e.target.value)
-                }
-                placeholder="Ví dụ: 5000"
-              />
-            </div>
-          </div>
-
-          {/* Buttons */}
-          <div className="mt-6 flex gap-3">
-            {/* HÀNH ĐỘNG PHỤ: ADD TO CART (Viền Xanh) */}
-            <button
-              className="flex-1 border-2 border-blue-600 text-blue-600 px-8 py-3 rounded-full hover:bg-blue-50 font-bold transition duration-200"
-              onClick={() => handleAddToCart(false)}
-            >
-              🛒 Add To Cart
-            </button>
-
-            {/* HÀNH ĐỘNG CHÍNH: BUY NOW (Nền Cam) */}
-            <button
-              onClick={() => handleAddToCart(true)}
-              className="flex-1 bg-orange-600 text-black px-8 py-3 rounded-full hover:bg-orange-700 font-extrabold shadow-xl tracking-wider transform hover:scale-105 transition duration-300 active:scale-95"
-            >
-              Buy Now
-            </button>
-          </div>
-        </div>
       </div>
+
+      {/* Footer decoration */}
+      <div className="bg-gradient-to-r from-red-600 via-green-600 to-red-600 h-2 mt-10"></div>
     </div>
   );
 }

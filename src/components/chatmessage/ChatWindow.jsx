@@ -1,10 +1,16 @@
-import { useEffect, useState, useCallback } from "react";
+import { useEffect, useState, useCallback, useRef } from "react";
 import { ChatApi } from "../../api/chatApi";
 import { connection } from "../../signalr/chatHub"; // Import kết nối SignalR
 
 export default function ChatWindow({ currentUserId, receiver }) {
     const [messages, setMessages] = useState([]);
     const [newMessage, setNewMessage] = useState("");
+    const messagesEndRef = useRef(null); // Ref cho phần tử cuối cùng của tin nhắn
+
+    // Scroll xuống cuối khi có tin nhắn mới
+    useEffect(() => {
+        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    }, [messages]);
 
     // 1. TẢI LỊCH SỬ TIN NHẮN (dùng useCallback để tối ưu)
     const loadMessages = useCallback(async () => {
@@ -76,12 +82,23 @@ export default function ChatWindow({ currentUserId, receiver }) {
             // Gửi tin nhắn qua API
             await ChatApi.sendMessage(messageData);
             
+            // Thêm tin nhắn của người dùng vào state ngay lập tức
+            const sentMessage = {
+                id: `temp-${Date.now()}`, // ID tạm thời cho tin nhắn optimistic
+                senderId: currentUserId,
+                receiverId: receiver.id,
+                message: newMessage.trim(),
+                timestamp: new Date().toISOString(),
+            };
+            setMessages((prevMessages) => [...prevMessages, sentMessage]);
+            
             // Xóa nội dung trong ô input sau khi gửi thành công
             setNewMessage("");
 
-            // LƯU Ý: Không cần tự thêm tin nhắn vào state ở đây nữa (Optimistic UI)
-            // vì server sẽ gửi lại tin nhắn đó qua SignalR và useEffect ở trên sẽ bắt được nó.
-            // Điều này giúp đảm bảo dữ liệu luôn đồng bộ với server và chống trùng lặp.
+            // LƯU Ý: Nếu sau này cần đồng bộ hóa chặt chẽ với SignalR
+            // và tránh trùng lặp, cần triển khai logic xóa/cập nhật
+            // tin nhắn optimistic khi tin nhắn thật từ SignalR đến.
+            // Hiện tại, sẽ ưu tiên hiển thị ngay lập tức theo yêu cầu.
 
         } catch (err) {
             console.error("❌ Gửi tin nhắn thất bại:", err);
@@ -120,6 +137,7 @@ export default function ChatWindow({ currentUserId, receiver }) {
                         </div>
                     </div>
                 ))}
+                <div ref={messagesEndRef} />
             </div>
 
             {/* Ô nhập tin */}

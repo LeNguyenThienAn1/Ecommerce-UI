@@ -50,90 +50,155 @@ export default function OrderTable({ orders, onView, onUpdateStatus }) {
   ];
 
   return (
-    <div className="overflow-x-auto">
-      <table className="min-w-full bg-white border rounded-lg shadow-sm">
-        <thead className="bg-gray-100">
-          <tr>
-            <th className="px-4 py-3 border text-left">Order ID</th>
-            <th className="px-4 py-3 border text-left">Customer</th>
-            <th className="px-4 py-3 border text-right">Total</th>
-            <th className="px-4 py-3 border text-center">Status</th>
-            <th className="px-4 py-3 border text-left">Created Date</th>
-            <th className="px-4 py-3 border text-center">Actions</th>
-          </tr>
-        </thead>
-
-        <tbody>
-          {orders.length === 0 ? (
+    <>
+      {/* Table for Medium and Large Screens */}
+      <div className="overflow-x-auto hidden md:block">
+        <table className="min-w-full bg-white border rounded-lg shadow-sm">
+          <thead className="bg-gray-100">
             <tr>
-              <td colSpan="6" className="text-center text-gray-500 py-6 italic">
-                No orders found.
-              </td>
+              <th className="px-4 py-3 border text-left">Order ID</th>
+              <th className="px-4 py-3 border text-left">Customer</th>
+              <th className="px-4 py-3 border text-right">Total</th>
+              <th className="px-4 py-3 border text-center">Status</th>
+              <th className="px-4 py-3 border text-left">Created Date</th>
+              <th className="px-4 py-3 border text-center">Actions</th>
             </tr>
-          ) : (
-            orders.map((order) => {
-              const status = getStatusDisplay(order.status);
-              const total =
-                order.items?.reduce(
-                  (sum, item) => sum + item.unitPrice * item.quantity,
-                  0
-                ) || 0;
+          </thead>
+          <tbody>
+            {orders.length === 0 ? (
+              <tr>
+                <td colSpan="6" className="text-center text-gray-500 py-6 italic">
+                  No orders found.
+                </td>
+              </tr>
+            ) : (
+              orders.map((order) => {
+                const status = getStatusDisplay(order.status);
+                const total =
+                  order.items?.reduce(
+                    (sum, item) => sum + item.unitPrice * item.quantity,
+                    0
+                  ) || 0;
 
-              return (
-                <tr key={order.id} className="border-t hover:bg-gray-50">
-                  <td className="px-4 py-2 font-mono text-sm">{order.id}</td>
-                  <td className="px-4 py-2">
-                    {order.customerName || "Unknown"}
-                  </td>
-                  <td className="px-4 py-2 text-right font-medium">
-                    {total.toLocaleString("en-US")} ₫
-                  </td>
-                  <td className="px-4 py-2 text-center">
-                    <span
-                      className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}
-                    >
-                      {status.text}
-                    </span>
-                  </td>
-                  <td className="px-4 py-2">
-                    {order.orderDate
-                      ? new Date(order.orderDate).toLocaleString("en-GB")
-                      : "Unknown"}
-                  </td>
-                  <td className="px-4 py-2 text-center space-y-2">
-                    {/* 🔍 View Details */}
-                    <button
-                      className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
-                      onClick={() => onView(order.id)}
-                    >
-                      View
-                    </button>
+                return (
+                  <tr key={order.id} className="border-t hover:bg-gray-50">
+                    <td className="px-4 py-2 font-mono text-sm">{order.id}</td>
+                    <td className="px-4 py-2">{order.customerName || "Unknown"}</td>
+                    <td className="px-4 py-2 text-right font-medium">
+                      {total.toLocaleString("en-US")} ₫
+                    </td>
+                    <td className="px-4 py-2 text-center">
+                      <span
+                        className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}
+                      >
+                        {status.text}
+                      </span>
+                    {/* LỖI ĐÃ ĐƯỢC SỬA: Thẻ đóng </td> đã được thêm vào */}
+                    </td>
+                    <td className="px-4 py-2">
+                      {order.orderDate
+                        ? new Date(order.orderDate).toLocaleString("en-GB")
+                        : "Unknown"}
+                    </td>
+                    <td className="px-4 py-2 text-center space-y-2">
+                      <button
+                        className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
+                        onClick={() => onView(order.id)}
+                      >
+                        View
+                      </button>
+                      <select
+                        className="mt-2 px-2 py-1 border rounded text-sm"
+                        defaultValue=""
+                        onChange={(e) => {
+                          const newStatus = parseInt(e.target.value, 10);
+                          if (!isNaN(newStatus)) {
+                            onUpdateStatus(order.id, newStatus);
+                          }
+                        }}
+                      >
+                        <option value="">-- Update Status --</option>
+                        {statusOptions.map((opt) => (
+                          <option key={opt.value} value={opt.value}>
+                            {opt.label}
+                          </option>
+                        ))}
+                      </select>
+                    </td>
+                  </tr>
+                );
+              })
+            )}
+          </tbody>
+        </table>
+      </div>
 
-                    {/* 🔄 Update Order Status */}
-                    <select
-                      className="mt-2 px-2 py-1 border rounded text-sm"
-                      defaultValue=""
-                      onChange={(e) => {
-                        const newStatus = parseInt(e.target.value, 10);
-                        if (!isNaN(newStatus)) {
-                          onUpdateStatus(order.id, newStatus);
-                        }
-                      }}
-                    >
-                      <option value="">-- Update Status --</option>
-                      {statusOptions.map((opt) => (
-                        <option key={opt.value} value={opt.value}>
-                          {opt.label}
-                        </option>
-                      ))}
-                    </select>
-                  </td>
-                </tr>
-              );
-            })
-          )}
-        </tbody>
-      </table>
-    </div>
+      {/* Cards for Small Screens */}
+      <div className="grid grid-cols-1 gap-4 md:hidden">
+        {orders.length === 0 ? (
+          <div className="text-center text-gray-500 py-6 italic">
+            No orders found.
+          </div>
+        ) : (
+          orders.map((order) => {
+            const status = getStatusDisplay(order.status);
+            const total =
+              order.items?.reduce(
+                (sum, item) => sum + item.unitPrice * item.quantity,
+                0
+              ) || 0;
+            return (
+              <div
+                key={order.id}
+                className="bg-white p-4 rounded-lg shadow-sm border"
+              >
+                <div className="flex justify-between items-start mb-2">
+                  <span className="font-bold">{order.customerName || "Unknown"}</span>
+                  <span
+                    className={`px-2 py-1 text-xs font-semibold rounded-full ${status.color}`}
+                  >
+                    {status.text}
+                  </span>
+                </div>
+                <div className="text-sm text-gray-600 mb-2 font-mono">{order.id}</div>
+                <div className="text-sm text-gray-600 mb-2">
+                  {order.orderDate
+                    ? new Date(order.orderDate).toLocaleString("en-GB")
+                    : "Unknown"}
+                </div>
+                <div className="text-lg font-bold text-right mb-4">
+                  {total.toLocaleString("en-US")} ₫
+                </div>
+                <div className="flex justify-end items-center gap-2">
+                  <button
+                    className="px-3 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors text-sm"
+                    onClick={() => onView(order.id)}
+                  >
+                    View
+                  </button>
+                  <select
+                    className="px-2 py-1 border rounded text-sm"
+                    defaultValue=""
+                    onChange={(e) => {
+                      const newStatus = parseInt(e.target.value, 10);
+                      if (!isNaN(newStatus)) {
+                        onUpdateStatus(order.id, newStatus);
+                      }
+                    }}
+                  >
+                    <option value="">-- Update Status --</option>
+                    {statusOptions.map((opt) => (
+                      <option key={opt.value} value={opt.value}>
+                        {opt.label}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+            );
+          })
+        )}
+      </div>
+    </>
   );
 }

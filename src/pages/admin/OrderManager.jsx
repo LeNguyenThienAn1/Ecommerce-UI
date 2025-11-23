@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo } from "react";
 import { OrderApi } from "../../api/orderApi";
 import OrderTable from "../../components/orders/OrderTable";
 import OrderDetailModal from "../../components/orders/OrderDetailModal";
@@ -8,13 +8,17 @@ export default function OrderManager() {
   const [selectedOrder, setSelectedOrder] = useState(null);
   const [isLoadingDetail, setIsLoadingDetail] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("All");
 
   // 📦 Lấy danh sách đơn hàng
   const fetchOrders = async () => {
     setLoading(true);
     try {
       const res = await OrderApi.getAll();
-      setOrders(res.data);
+      // Sort orders by date, newest first
+      const sortedOrders = res.data.sort((a, b) => new Date(b.orderDate) - new Date(a.orderDate));
+      setOrders(sortedOrders);
     } catch (err) {
       console.error("❌ Lỗi khi tải danh sách đơn hàng:", err);
       alert("Không thể tải danh sách đơn hàng!");
@@ -26,6 +30,25 @@ export default function OrderManager() {
   useEffect(() => {
     fetchOrders();
   }, []);
+
+  // Memoize filtered and searched orders
+  const displayedOrders = useMemo(() => {
+    return orders
+      .filter(order => {
+        // Filter by status
+        if (statusFilter === "All") return true;
+        return order.status === parseInt(statusFilter);
+      })
+      .filter(order => {
+        // Search by term
+        const term = searchTerm.toLowerCase();
+        if (!term) return true;
+        return (
+          order.id.toLowerCase().includes(term) ||
+          (order.customerName && order.customerName.toLowerCase().includes(term))
+        );
+      });
+  }, [orders, searchTerm, statusFilter]);
 
   // 🔍 Xem chi tiết đơn hàng
   const handleViewDetails = async (orderId) => {
@@ -58,14 +81,39 @@ export default function OrderManager() {
   };
 
   return (
-    <div className="p-6">
-      <h1 className="text-2xl font-bold mb-4">Quản lý đơn hàng</h1>
+    <div className="p-4 md:p-6">
+      <h1 className="text-xl md:text-2xl font-bold mb-4">Quản lý đơn hàng</h1>
+
+      {/* Search and Filter UI */}
+      <div className="flex flex-col md:flex-row justify-between items-stretch md:items-center mb-4 bg-white p-4 rounded-lg shadow-sm gap-4">
+        <input
+          type="text"
+          placeholder="Search by Order ID or Customer..."
+          className="border p-2 rounded-md w-full md:w-1/3"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+        />
+        <select
+          className="border p-2 rounded-md w-full md:w-auto"
+          value={statusFilter}
+          onChange={(e) => setStatusFilter(e.target.value)}
+        >
+          <option value="All">All Statuses</option>
+          <option value="0">Created</option>
+          <option value="1">Seller Confirmed</option>
+          <option value="2">Preparing Shipment</option>
+          <option value="5">Delivered Successfully</option>
+          <option value="6">Paid</option>
+          <option value="3">Rejected</option>
+          <option value="4">Failed to Deliver</option>
+        </select>
+      </div>
 
       {loading ? (
         <div className="text-center py-6">Đang tải dữ liệu...</div>
       ) : (
         <OrderTable
-          orders={orders}
+          orders={displayedOrders}
           onView={handleViewDetails}
           onUpdateStatus={handleUpdateStatus}
         />
